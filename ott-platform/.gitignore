@@ -1,0 +1,56 @@
+# Environment
+.env
+.env.local
+.env.production
+**/.env
+!**/.env.example
+
+# Node
+node_modules/
+dist/
+build/
+.next/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/google-services.json
+android/*.jks
+android/*.keystore
+
+# Docker volumes (don't commit)
+postgres_data/
+redis_data/
+
+# Nginx SSL (never commit)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backups
+*.bak
+*.backup
+
+# Upload temp
+uploads/
+/tmp/worker/
+
+# TypeScript
+*.js.map
+*.d.ts.map

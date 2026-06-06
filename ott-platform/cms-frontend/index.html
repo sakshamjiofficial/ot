@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    // Prevent Vite HMR WebSocket connection from causing infinite reload loops in Codespaces
+    if (window.location.hostname.includes('github.dev') || window.location.hostname.includes('gitpod.io')) {
+      const NativeWebSocket = window.WebSocket;
+      window.WebSocket = function (url, protocols) {
+        if (typeof url === 'string' && (url.includes('/vite') || url.includes('5174') || url.includes('5173'))) {
+          console.log('Blocked HMR WebSocket connection:', url);
+          const mockWS = {
+            readyState: 1, // 1 = OPEN
+            addEventListener: function (event, cb) {
+              if (event === 'open') {
+                // Trigger open event immediately to make Vite think connection succeeded
+                setTimeout(() => cb({}), 0);
+              }
+            },
+            removeEventListener: function () {},
+            send: function () {},
+            close: function () {},
+          };
+          return mockWS;
+        }
+        return new NativeWebSocket(url, protocols);
+      };
+      window.WebSocket.prototype = NativeWebSocket.prototype;
+    }
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>OTT Admin — ssooss.store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body class="bg-surface-900 text-white antialiased">
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

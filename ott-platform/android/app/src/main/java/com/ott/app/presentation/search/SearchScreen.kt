@@ -1,0 +1,148 @@
+package com.ott.app.presentation.search
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import com.ott.app.domain.model.Content
+import com.ott.app.presentation.common.OttColors
+
+@Composable
+fun SearchScreen(
+    onContentClick: (String) -> Unit,
+    onBack:         () -> Unit,
+    viewModel:      SearchViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var query   by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(OttColors.Background)
+            .statusBarsPadding(),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            OutlinedTextField(
+                value         = query,
+                onValueChange = { query = it; viewModel.search(it) },
+                placeholder   = { Text("Movies, series, genres…", color = OttColors.TextMuted) },
+                leadingIcon   = { Icon(Icons.Default.Search, null, tint = OttColors.TextMuted) },
+                trailingIcon  = if (query.isNotEmpty()) {
+                    { IconButton(onClick = { query = ""; viewModel.search("") }) {
+                        Icon(Icons.Default.Clear, null, tint = OttColors.TextMuted)
+                    }}
+                } else null,
+                singleLine    = true,
+                modifier      = Modifier.weight(1f),
+                shape         = RoundedCornerShape(12.dp),
+                colors        = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor   = OttColors.Brand,
+                    unfocusedBorderColor = OttColors.Border,
+                    focusedTextColor     = Color.White,
+                    unfocusedTextColor   = Color.White,
+                ),
+            )
+        }
+
+        when {
+            uiState.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = OttColors.Brand)
+            }
+            uiState.results.isEmpty() && query.isNotBlank() -> Box(
+                Modifier.fillMaxSize().padding(top = 60.dp),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.SearchOff, null, tint = OttColors.TextMuted, modifier = Modifier.size(48.dp))
+                    Spacer(Modifier.height(12.dp))
+                    Text("No results for \"$query\"", color = OttColors.TextMuted, fontSize = 15.sp)
+                }
+            }
+            else -> LazyColumn(
+                contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                items(uiState.results, key = { it.id }) { item ->
+                    SearchResultRow(item = item, onClick = { onContentClick(item.id) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchResultRow(item: Content, onClick: () -> Unit) {
+    Row(
+        modifier              = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        verticalAlignment     = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp, 90.dp)
+                .background(OttColors.SurfaceVariant, RoundedCornerShape(6.dp)),
+        ) {
+            AsyncImage(
+                model              = item.thumbnailUrl ?: item.posterUrl,
+                contentDescription = null,
+                contentScale       = ContentScale.Crop,
+                modifier           = Modifier.fillMaxSize(),
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(item.title, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(3.dp))
+            Text(
+                "${item.type.name.lowercase().replaceFirstChar { it.uppercase() }} · ${item.releaseYear ?: ""}",
+                color = OttColors.TextMuted, fontSize = 13.sp,
+            )
+            item.imdbRating?.let {
+                Spacer(Modifier.height(2.dp))
+                Text("⭐ $it / 10", color = OttColors.TextMuted, fontSize = 12.sp)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
+                item.genres.take(2).forEach { genre ->
+                    Box(
+                        modifier = Modifier
+                            .background(OttColors.SurfaceElevated, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(genre.name, color = OttColors.TextSecondary, fontSize = 10.sp)
+                    }
+                }
+            }
+        }
+
+        if (item.isPremium) {
+            Box(
+                modifier = Modifier
+                    .background(OttColors.Brand, RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 3.dp),
+            ) {
+                Text("PRO", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
