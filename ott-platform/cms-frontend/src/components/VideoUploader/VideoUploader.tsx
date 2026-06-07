@@ -46,9 +46,9 @@ export default function VideoUploader({ content, episodeId, onSuccess }: VideoUp
     disabled: isUploading,
   });
 
-  // Filter uploads for this content
+  // Filter uploads for this content/episode
   const contentUploads = Object.values(uploads).filter(
-    (u) => u.contentId === content.id && (episodeId ? u.contentTitle === content.title : true),
+    (u) => u.contentId === content.id && u.episodeId === episodeId,
   );
 
   const handleRetry = async (videoAssetId: string) => {

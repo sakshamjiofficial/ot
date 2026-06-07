@@ -177,13 +177,23 @@ export default function ContentList({ type }: ContentListProps) {
           onRowClick={(row) => navigate(`/${isMovie ? 'movies' : 'series'}/${row.id}/edit`)}
           rowActions={(row) => (
             <div className="flex justify-end gap-1">
-              <button
-                onClick={() => navigate(`/${isMovie ? 'movies' : 'series'}/${row.id}/upload`)}
-                className="rounded-lg p-1.5 text-surface-400 hover:bg-surface-600 hover:text-white transition-colors"
-                title="Upload video"
-              >
-                <Upload size={14} />
-              </button>
+              {isMovie ? (
+                <button
+                  onClick={() => navigate(`/movies/${row.id}/upload`)}
+                  className="rounded-lg p-1.5 text-surface-400 hover:bg-surface-600 hover:text-white transition-colors"
+                  title="Upload video"
+                >
+                  <Upload size={14} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate(`/series/${row.id}/episodes`)}
+                  className="rounded-lg p-1.5 text-surface-400 hover:bg-surface-600 hover:text-white transition-colors"
+                  title="Manage Episodes"
+                >
+                  <Tv size={14} />
+                </button>
+              )}
               <button
                 onClick={() => navigate(`/${isMovie ? 'movies' : 'series'}/${row.id}/edit`)}
                 className="rounded-lg p-1.5 text-surface-400 hover:bg-surface-600 hover:text-white transition-colors"

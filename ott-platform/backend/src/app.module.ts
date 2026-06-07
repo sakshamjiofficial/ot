@@ -24,6 +24,7 @@ import { MetricsModule } from './metrics/metrics.module';
 import { DeviceFingerprintMiddleware } from './common/middleware/device-fingerprint.middleware';
 import { databaseConfig } from './config/database.config';
 import { appConfig } from './config/app.config';
+import { BannersModule } from './banners/banners.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { appConfig } from './config/app.config';
     NotificationsModule,
     HealthModule,
     MetricsModule,
+    BannersModule,
   ],
   providers: [
     // Global throttler guard

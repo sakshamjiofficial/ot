@@ -9,6 +9,7 @@ export interface UploadItem {
   filename:     string;
   fileSize:     number;
   contentId?:   string;
+  episodeId?:   string;
   contentTitle: string;
   status:       UploadStatus;
   progress:     number;          // 0-100 (upload progress)

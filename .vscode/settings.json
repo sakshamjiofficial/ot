@@ -1,0 +1,14 @@
+{
+  "remote.portsAttributes": {
+    "9000": {
+      "label": "MinIO API",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
+    "9001": {
+      "label": "MinIO Console",
+      "onAutoForward": "silent",
+      "visibility": "private"
+    }
+  }
+}

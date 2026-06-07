@@ -22,6 +22,8 @@ const SettingsPage       = lazy(() => import('@/pages/Settings/SettingsPage'));
 const SubscriptionsPage  = lazy(() => import('@/pages/Subscriptions/SubscriptionsPage'));
 const GenresPage         = lazy(() => import('@/pages/Genres/GenresPage'));
 const AnalyticsPage      = lazy(() => import('@/pages/Analytics/AnalyticsPage'));
+const BannersPage        = lazy(() => import('@/pages/Banners/BannersPage'));
+const EpisodesPage       = lazy(() => import('@/pages/Content/EpisodesPage'));
 
 // ─── Auth Guard ───────────────────────────────────────────────
 function RequireAuth() {
@@ -108,6 +110,10 @@ const router = createBrowserRouter([
             path:    'series/:id/upload',
             element: <Suspense fallback={<PageLoader />}><UploadPage /></Suspense>,
           },
+          {
+            path:    'series/:id/episodes',
+            element: <Suspense fallback={<PageLoader />}><EpisodesPage /></Suspense>,
+          },
           // Upload
           {
             path:    'upload',
@@ -145,6 +151,11 @@ const router = createBrowserRouter([
           {
             path:    'genres',
             element: <Suspense fallback={<PageLoader />}><GenresPage /></Suspense>,
+          },
+          // Banners
+          {
+            path:    'banners',
+            element: <Suspense fallback={<PageLoader />}><BannersPage /></Suspense>,
           },
           // Analytics
           {

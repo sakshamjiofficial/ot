@@ -30,6 +30,7 @@ export function useUploader(opts: UseUploaderOptions) {
       filename:     file.name,
       fileSize:     file.size,
       contentId:    opts.contentId,
+      episodeId:    opts.episodeId,
       contentTitle: opts.contentTitle,
       status:       'preparing',
       progress:     0,
