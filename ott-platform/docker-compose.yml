@@ -50,8 +50,14 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      NODE_ENV: production
-    expose: ["3000"]
+      NODE_ENV: development
+      POSTGRES_HOST: postgres
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_HOST: redis
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      MEILISEARCH_URL: http://meilisearch:7700
+    ports:
+      - "3000:3000"
     depends_on:
       postgres:      { condition: service_healthy }
       redis:         { condition: service_healthy }
@@ -60,7 +66,7 @@ services:
     volumes:
       - upload_tmp:/app/uploads
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health/live"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/v1/health/live"]
       interval: 30s
       timeout: 10s
       start_period: 40s
@@ -94,10 +100,14 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      NODE_ENV:          production
+      NODE_ENV:          development
       WORK_DIR:          /tmp/worker
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
       MAX_CPU_PERCENT:   ${MAX_CPU_PERCENT:-80}
+      POSTGRES_HOST: postgres
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_HOST: redis
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     depends_on:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
@@ -116,7 +126,7 @@ services:
       resources:
         limits:
           memory: 1500M
-          cpus:   "2.5"
+          cpus:   "1.5"
     # Scale workers: docker compose up -d --scale worker=2 worker
 
   # ── PostgreSQL 16 ────────────────────────────────────────────

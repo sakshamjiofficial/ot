@@ -21,8 +21,8 @@ export const authApi = {
 // ─── Content ───────────────────────────────────────────────────
 
 export const contentApi = {
-  listMovies:  (params?: Record<string, any>) => apiGet<any>('/movies', params),
-  listSeries:  (params?: Record<string, any>) => apiGet<any>('/series', params),
+  listMovies:  (params?: Record<string, any>) => apiGet<any>('/admin/content', { ...params, type: 'movie' }),
+  listSeries:  (params?: Record<string, any>) => apiGet<any>('/admin/content', { ...params, type: 'series' }),
   getById:     (id: string)  => apiGet<Content>(`/admin/content/${id}`),
   create:      (data: any)   => apiPost<Content>('/admin/content', data),
   update:      (id: string, data: any) => apiPut<Content>(`/admin/content/${id}`, data),

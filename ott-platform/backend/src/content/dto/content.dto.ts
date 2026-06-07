@@ -14,9 +14,10 @@ import {
   IsDateString,
   ArrayMaxSize,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ContentType, ContentStatus } from '../entities/content.entity';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class CreateContentDto {
   @ApiProperty({ enum: ContentType })
@@ -233,4 +234,37 @@ export class UpdateWatchProgressDto {
   @IsOptional()
   @IsString()
   deviceId?: string;
+}
+
+export class GetMoviesDto extends PaginationDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  genreId?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  isPremium?: boolean;
+}
+
+export class GetSeriesDto extends PaginationDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  genreId?: number;
+}
+
+export class GetAdminContentDto extends PaginationDto {
+  @IsEnum(ContentType)
+  type: ContentType;
+
+  @IsOptional()
+  @IsEnum(ContentStatus)
+  status?: ContentStatus;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  genreId?: number;
 }

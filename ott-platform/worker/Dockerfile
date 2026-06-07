@@ -29,7 +29,6 @@ FROM node:20-alpine AS production
 # Install FFmpeg and runtime libs
 RUN apk add --no-cache \
     ffmpeg \
-    ffprobe \
     vips \
     && rm -rf /var/cache/apk/*
 

@@ -140,6 +140,44 @@ export class ContentService {
     };
   }
 
+  async findAllContentAdmin(
+    type: ContentType,
+    pagination: PaginationDto & { status?: ContentStatus; genreId?: number },
+  ) {
+    const { page = 1, limit = 20, search, status, genreId } = pagination;
+    const skip = (page - 1) * limit;
+
+    const qb = this.contentRepo
+      .createQueryBuilder('c')
+      .leftJoinAndSelect('c.genres', 'genre')
+      .where('c.type = :type', { type })
+      .orderBy('c.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    if (status) {
+      qb.andWhere('c.status = :status', { status });
+    }
+
+    if (search) {
+      qb.andWhere(
+        `(c.title ILIKE :search OR c.description ILIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    if (genreId) {
+      qb.andWhere('genre.id = :genreId', { genreId });
+    }
+
+    const [items, total] = await qb.getManyAndCount();
+
+    return {
+      items,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
   // ─── Find By ID ───────────────────────────────────────────
 
   async findContentById(id: string): Promise<ContentEntity> {

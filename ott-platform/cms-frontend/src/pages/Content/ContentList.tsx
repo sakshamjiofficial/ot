@@ -27,8 +27,8 @@ export default function ContentList({ type }: ContentListProps) {
   const { data, isLoading } = useQuery({
     queryKey: [type === 'movie' ? 'movies' : 'series', { page, search, status }],
     queryFn:  () => isMovie
-      ? contentApi.listMovies({ page, limit: 20, search: search || undefined })
-      : contentApi.listSeries({ page, limit: 20, search: search || undefined }),
+      ? contentApi.listMovies({ page, limit: 20, search: search || undefined, status: status || undefined })
+      : contentApi.listSeries({ page, limit: 20, search: search || undefined, status: status || undefined }),
     placeholderData: (prev) => prev,
   });
 

@@ -1,6 +1,10 @@
 import * as winston from 'winston';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const { combine, timestamp, printf, colorize, errors } = winston.format;
+
+const logDir = process.env.LOG_DIR || (fs.existsSync('/var/log/worker') ? '/var/log/worker' : './logs');
 
 const logFormat = printf(({ level, message, timestamp, jobId, stack, ...meta }) => {
   const jobTag = jobId ? ` [job:${jobId}]` : '';
@@ -27,13 +31,13 @@ export const logger = winston.createLogger({
       ),
     }),
     new winston.transports.File({
-      filename: './logs/error.log',
+      filename: path.join(logDir, 'error.log'),
       level:    'error',
       maxsize:  10 * 1024 * 1024,   // 10 MB
       maxFiles: 5,
     }),
     new winston.transports.File({
-      filename: './logs/combined.log',
+      filename: path.join(logDir, 'combined.log'),
       maxsize:  50 * 1024 * 1024,   // 50 MB
       maxFiles: 3,
     }),

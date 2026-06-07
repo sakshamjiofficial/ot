@@ -42,8 +42,8 @@ export async function updateJobStatus(
            error_message  = $3,
            worker_id      = COALESCE($4, worker_id),
            retry_count    = COALESCE($5, retry_count),
-           started_at     = CASE WHEN $1 = 'processing' AND started_at IS NULL THEN NOW() ELSE started_at END,
-           completed_at   = CASE WHEN $1 IN ('completed','failed') THEN NOW() ELSE NULL END,
+           started_at     = CASE WHEN $1::text = 'processing' AND started_at IS NULL THEN NOW() ELSE started_at END,
+           completed_at   = CASE WHEN $1::text IN ('completed','failed') THEN NOW() ELSE NULL END,
            updated_at     = NOW()
        WHERE id = $6`,
       [

@@ -15,6 +15,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 export class R2ApiService {
   private readonly logger = new Logger(R2ApiService.name);
   private readonly s3:     S3Client;
+  private readonly s3Presigner: S3Client;
   private readonly bucket: string;
   readonly cdnBase:        string;
 
@@ -32,6 +33,26 @@ export class R2ApiService {
       },
       forcePathStyle: true,
     });
+
+    let presignerEndpoint = this.configService.get('app.cloudflare.r2Endpoint');
+    try {
+      const publicUrl = this.configService.get('CF_R2_PUBLIC_URL');
+      if (publicUrl) {
+        presignerEndpoint = new URL(publicUrl).origin;
+      }
+    } catch (e) {
+      this.logger.error('Failed to parse CF_R2_PUBLIC_URL for presigner endpoint: ' + e.message);
+    }
+
+    this.s3Presigner = new S3Client({
+      region:   'auto',
+      endpoint: presignerEndpoint,
+      credentials: {
+        accessKeyId:     this.configService.get('app.cloudflare.r2AccessKey'),
+        secretAccessKey: this.configService.get('app.cloudflare.r2SecretKey'),
+      },
+      forcePathStyle: true,
+    });
   }
 
   async createMultipartUpload(key: string, contentType: string): Promise<{ uploadId: string; key: string }> {
@@ -42,7 +63,7 @@ export class R2ApiService {
 
   async presignPartUrl(key: string, uploadId: string, partNumber: number, expiresIn = 3600): Promise<string> {
     const cmd = new UploadPartCommand({ Bucket: this.bucket, Key: key, UploadId: uploadId, PartNumber: partNumber });
-    return getSignedUrl(this.s3, cmd, { expiresIn });
+    return getSignedUrl(this.s3Presigner, cmd, { expiresIn });
   }
 
   async completeMultipartUpload(key: string, uploadId: string, parts: { PartNumber: number; ETag: string }[]): Promise<string> {
@@ -56,7 +77,7 @@ export class R2ApiService {
 
   async presignPutUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
     const cmd = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType });
-    return getSignedUrl(this.s3, cmd, { expiresIn });
+    return getSignedUrl(this.s3Presigner, cmd, { expiresIn });
   }
 
   async deleteObject(key: string): Promise<void> {

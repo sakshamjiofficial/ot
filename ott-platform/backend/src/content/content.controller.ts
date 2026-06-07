@@ -26,6 +26,9 @@ import {
   CreateSeasonDto,
   CreateEpisodeDto,
   UpdateWatchProgressDto,
+  GetMoviesDto,
+  GetSeriesDto,
+  GetAdminContentDto,
 } from './dto/content.dto';
 import { JwtAuthGuard }  from '../common/guards/jwt-auth.guard';
 import { RolesGuard }    from '../common/guards/roles.guard';
@@ -33,7 +36,7 @@ import { Roles, Role }   from '../common/decorators/roles.decorator';
 import { CurrentUser }   from '../common/decorators/current-user.decorator';
 import { Public }        from '../common/decorators/public.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { ContentType }   from './entities/content.entity';
+import { ContentType, ContentStatus } from './entities/content.entity';
 
 @ApiTags('content')
 @ApiBearerAuth('access-token')
@@ -52,10 +55,9 @@ export class ContentController {
   @ApiQuery({ name: 'genreId', required: false, type: Number })
   @ApiQuery({ name: 'isPremium', required: false, type: Boolean })
   getMovies(
-    @Query() pagination: PaginationDto,
-    @Query('genreId') genreId?: number,
-    @Query('isPremium') isPremium?: boolean,
+    @Query() query: GetMoviesDto,
   ) {
+    const { genreId, isPremium, ...pagination } = query;
     return this.contentService.findAllContent(ContentType.MOVIE, {
       ...pagination,
       genreId,
@@ -78,9 +80,9 @@ export class ContentController {
   @Get('series')
   @ApiOperation({ summary: 'List published series' })
   getSeries(
-    @Query() pagination: PaginationDto,
-    @Query('genreId') genreId?: number,
+    @Query() query: GetSeriesDto,
   ) {
+    const { genreId, ...pagination } = query;
     return this.contentService.findAllContent(ContentType.SERIES, {
       ...pagination,
       genreId,
@@ -207,6 +209,23 @@ export class ContentController {
   // ─────────────────────────────────────────────────────────
   // ADMIN — Content CRUD
   // ─────────────────────────────────────────────────────────
+
+  @Get('admin/content')
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  @ApiOperation({ summary: '[Admin] List movies or series' })
+  @ApiQuery({ name: 'type', required: true, enum: ContentType })
+  @ApiQuery({ name: 'status', required: false, enum: ContentStatus })
+  @ApiQuery({ name: 'genreId', required: false, type: Number })
+  getAdminContent(
+    @Query() query: GetAdminContentDto,
+  ) {
+    const { type, status, genreId, ...pagination } = query;
+    return this.contentService.findAllContentAdmin(type, {
+      ...pagination,
+      status,
+      genreId,
+    });
+  }
 
   @Post('admin/content')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
