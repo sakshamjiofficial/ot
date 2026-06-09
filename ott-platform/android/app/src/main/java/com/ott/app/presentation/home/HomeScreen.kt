@@ -530,8 +530,8 @@ private fun HeroBanner(
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth().aspectRatio(0.67f),
-            contentPadding = PaddingValues(horizontal = 24.dp)
+            modifier = Modifier.fillMaxWidth().aspectRatio(0.76f),
+            contentPadding = PaddingValues(horizontal = 16.dp)
         ) { page ->
             val item = items[page]
             Box(
@@ -968,7 +968,7 @@ private fun HomeSkeletonLoader() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(0.67f)
+                    .aspectRatio(0.76f)
                     .padding(horizontal = 24.dp, vertical = 12.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(shimmerBrush)
