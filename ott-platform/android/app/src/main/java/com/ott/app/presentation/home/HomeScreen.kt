@@ -1,6 +1,7 @@
 package com.ott.app.presentation.home
 
 import androidx.compose.animation.*
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -80,7 +81,19 @@ fun HomeScreen(
             if (uiState.isLoading && uiState.featured.isEmpty()) {
                 HomeSkeletonLoader()
             } else {
+                val listState = rememberLazyListState()
+                val isScrolled by remember {
+                    derivedStateOf {
+                        listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+                    }
+                }
+                val headerBgColor by animateColorAsState(
+                    targetValue = if (isScrolled) Color.Black else Color(0xFF1A0808),
+                    label = "headerBgColor"
+                )
+
                 LazyColumn(
+                    state               = listState,
                     modifier            = Modifier.fillMaxSize(),
                     contentPadding      = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(0.dp),
@@ -103,7 +116,7 @@ fun HomeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF1A0808))
+                                .background(headerBgColor)
                                 .statusBarsPadding()
                         ) {
                             HomeTopBar(
@@ -517,7 +530,7 @@ private fun HeroBanner(
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth().aspectRatio(0.72f),
+            modifier = Modifier.fillMaxWidth().aspectRatio(0.67f),
             contentPadding = PaddingValues(horizontal = 24.dp)
         ) { page ->
             val item = items[page]
@@ -955,7 +968,7 @@ private fun HomeSkeletonLoader() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(0.72f)
+                    .aspectRatio(0.67f)
                     .padding(horizontal = 24.dp, vertical = 12.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(shimmerBrush)
