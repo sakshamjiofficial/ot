@@ -750,64 +750,50 @@ private fun ContentCard(
     Box(
         modifier = Modifier
             .width(100.dp)
+            .height(145.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(OttColors.SurfaceVariant)
             .clickable(onClick = onClick),
     ) {
-        Column {
+        AsyncImage(
+            model              = item.posterUrl ?: item.thumbnailUrl ?: item.bannerUrl,
+            contentDescription = item.title,
+            contentScale       = ContentScale.Crop,
+            modifier           = Modifier.fillMaxSize(),
+        )
+        
+        // Red "K" logo in top-left
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(6.dp)
+        ) {
+            Text(
+                text = "K",
+                color = OttColors.Brand,
+                fontWeight = FontWeight.Black,
+                fontSize = 14.sp,
+                style = LocalTextStyle.current.copy(
+                    shadow = Shadow(
+                        color = Color.Black.copy(alpha = 0.5f),
+                        blurRadius = 4f
+                    )
+                )
+            )
+        }
+
+        // PRO badge in bottom-right
+        if (item.isPremium) {
             Box(
                 modifier = Modifier
-                    .width(100.dp)
-                    .height(145.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(OttColors.SurfaceVariant),
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(OttColors.Brand)
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
             ) {
-                AsyncImage(
-                    model              = item.posterUrl ?: item.thumbnailUrl ?: item.bannerUrl,
-                    contentDescription = item.title,
-                    contentScale       = ContentScale.Crop,
-                    modifier           = Modifier.fillMaxSize(),
-                )
-                
-                // Red "K" logo in top-left
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(6.dp)
-                ) {
-                    Text(
-                        text = "K",
-                        color = OttColors.Brand,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 14.sp,
-                        style = LocalTextStyle.current.copy(
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.5f),
-                                blurRadius = 4f
-                            )
-                        )
-                    )
-                }
-
-                // PRO badge in bottom-right
-                if (item.isPremium) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(OttColors.Brand)
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                    ) {
-                        Text("PRO", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.ExtraBold)
-                    }
-
-                }
+                Text("PRO", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.ExtraBold)
             }
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = item.title,
-                color = Color.White.copy(alpha = 0.9f),
-                fontSize = 11.sp,
-            )
         }
     }
 }
@@ -914,45 +900,37 @@ private fun WideContentCard(
         (progress.watchedSeconds.toFloat() / progress.totalSeconds!!.toFloat()).coerceIn(0f, 1f)
     } else 0f
 
-
-    Column(
+    Box(
         modifier = Modifier
             .width(160.dp)
+            .height(90.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(OttColors.SurfaceVariant)
             .clickable(onClick = onClick)
     ) {
+        AsyncImage(
+            model              = item.bannerUrl ?: item.thumbnailUrl,
+            contentDescription = item.title,
+            contentScale       = ContentScale.Crop,
+            modifier           = Modifier.fillMaxSize(),
+        )
+        // Play icon overlay
         Box(
             modifier = Modifier
-                .width(160.dp)
-                .height(90.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(OttColors.SurfaceVariant)
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f)),
+            contentAlignment = Alignment.Center,
         ) {
-            AsyncImage(
-                model              = item.bannerUrl ?: item.thumbnailUrl,
-                contentDescription = item.title,
-                contentScale       = ContentScale.Crop,
-                modifier           = Modifier.fillMaxSize(),
-            )
-            // Play icon overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Default.PlayCircle, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(36.dp))
-            }
+            Icon(Icons.Default.PlayCircle, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(36.dp))
+        }
 
-            // Progress bar at bottom
-            if (pct > 0f) {
-                Box(modifier = Modifier.fillMaxWidth().height(3.dp).align(Alignment.BottomCenter)) {
-                    Box(modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.3f)))
-                    Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(pct).background(OttColors.Brand))
-                }
+        // Progress bar at bottom
+        if (pct > 0f) {
+            Box(modifier = Modifier.fillMaxWidth().height(3.dp).align(Alignment.BottomCenter)) {
+                Box(modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.3f)))
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(pct).background(OttColors.Brand))
             }
         }
-        Spacer(Modifier.height(5.dp))
-        Text(item.title, color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
