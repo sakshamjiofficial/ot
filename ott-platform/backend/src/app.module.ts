@@ -25,6 +25,8 @@ import { DeviceFingerprintMiddleware } from './common/middleware/device-fingerpr
 import { databaseConfig } from './config/database.config';
 import { appConfig } from './config/app.config';
 import { BannersModule } from './banners/banners.module';
+import { HomeSectionsModule } from './home-sections/home-sections.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -105,7 +107,9 @@ import { BannersModule } from './banners/banners.module';
     HealthModule,
     MetricsModule,
     BannersModule,
+    HomeSectionsModule,
   ],
+  controllers: [AppController],
   providers: [
     // Global throttler guard
     { provide: APP_GUARD, useClass: ThrottlerGuard },

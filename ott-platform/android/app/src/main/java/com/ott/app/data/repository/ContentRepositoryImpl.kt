@@ -159,6 +159,32 @@ class ContentRepositoryImpl @Inject constructor(
             }
         }
 
+    override fun getHomeFeed(): Flow<Resource<List<HomeSection>>> =
+        flow {
+            emit(Resource.Loading)
+            try {
+                val response = api.getHomeFeed()
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val dtos = response.body()?.data ?: emptyList()
+                    val domainSections = dtos.map { sectionDto ->
+                        HomeSection(
+                            id = sectionDto.id,
+                            title = sectionDto.title,
+                            sectionType = sectionDto.sectionType,
+                            items = sectionDto.items.map { it.toContentDomain() },
+                            progressItems = sectionDto.items.mapNotNull { it.toWatchProgressDomain() }
+                        )
+                    }
+                    emit(Resource.Success(domainSections))
+                } else {
+                    emit(Resource.Error("Failed to load home feed", response.code()))
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "getHomeFeed failed")
+                emit(Resource.Error(e.message ?: "Network error"))
+            }
+        }
+
     // ─── Generic network-bound flow ───────────────────────────
 
     private fun <L, R, D> networkBoundFlow(
@@ -200,6 +226,50 @@ class ContentRepositoryImpl @Inject constructor(
 }
 
 // ─── Mappers ──────────────────────────────────────────────────
+
+fun HomeSectionItemDto.toContentDomain(): Content {
+    val targetDto = this.content ?: ContentDto(
+        id = id,
+        type = type ?: "movie",
+        title = title ?: "",
+        slug = slug ?: "",
+        description = description,
+        shortDescription = shortDescription,
+        language = language ?: "en",
+        releaseYear = releaseYear,
+        durationSeconds = durationSeconds,
+        ageRating = ageRating,
+        status = status ?: "published",
+        isPremium = isPremium ?: false,
+        isFeatured = isFeatured ?: false,
+        isTrending = isTrending ?: false,
+        imdbRating = imdbRating,
+        trailerUrl = trailerUrl,
+        posterUrl = posterUrl,
+        bannerUrl = bannerUrl,
+        thumbnailUrl = thumbnailUrl,
+        totalPlays = totalPlays ?: 0L,
+        genres = genres ?: emptyList(),
+        seasons = seasons,
+        videoAssets = videoAssets,
+        publishedAt = publishedAt,
+        createdAt = createdAt ?: ""
+    )
+    return targetDto.toDomain()
+}
+
+fun HomeSectionItemDto.toWatchProgressDomain(): WatchProgress? {
+    val contentDomain = this.content?.toDomain() ?: return null
+    return WatchProgress(
+        contentId = contentId ?: contentDomain.id,
+        episodeId = episodeId,
+        watchedSeconds = watchedSeconds ?: 0,
+        totalSeconds = totalSeconds,
+        completed = completed ?: false,
+        content = contentDomain,
+        episode = null
+    )
+}
 
 fun ContentDto.toDomain(): Content = Content(
     id               = id,

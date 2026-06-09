@@ -46,6 +46,7 @@ data class SeasonDto(
 
 data class EpisodeDto(
     @SerializedName("id")              val id:              String,
+    @SerializedName("contentId")       val contentId:       String? = null,
     @SerializedName("episodeNumber")   val episodeNumber:   Int,
     @SerializedName("title")           val title:           String,
     @SerializedName("description")     val description:     String?,
@@ -138,4 +139,47 @@ data class CreateOrderResponse(
     @SerializedName("amount")   val amount:   Int,
     @SerializedName("currency") val currency: String,
     @SerializedName("keyId")    val keyId:    String,
+)
+
+data class HomeSectionItemDto(
+    @SerializedName("id")               val id:               String,
+    @SerializedName("contentId")        val contentId:        String? = null,
+    @SerializedName("episodeId")        val episodeId:        String? = null,
+    @SerializedName("watchedSeconds")   val watchedSeconds:   Int? = null,
+    @SerializedName("totalSeconds")     val totalSeconds:     Int? = null,
+    @SerializedName("completed")        val completed:        Boolean? = null,
+    @SerializedName("lastWatchedAt")    val lastWatchedAt:    String? = null,
+    @SerializedName("content")          val content:          ContentDto? = null,
+
+    @SerializedName("type")             val type:             String? = null,
+    @SerializedName("title")            val title:            String? = null,
+    @SerializedName("slug")             val slug:             String? = null,
+    @SerializedName("description")      val description:      String? = null,
+    @SerializedName("shortDescription") val shortDescription: String? = null,
+    @SerializedName("language")         val language:         String? = null,
+    @SerializedName("releaseYear")      val releaseYear:      Int? = null,
+    @SerializedName("durationSeconds")  val durationSeconds:  Int? = null,
+    @SerializedName("ageRating")        val ageRating:        String? = null,
+    @SerializedName("status")           val status:           String? = null,
+    @SerializedName("isPremium")        val isPremium:        Boolean? = null,
+    @SerializedName("isFeatured")       val isFeatured:       Boolean? = null,
+    @SerializedName("isTrending")       val isTrending:       Boolean? = null,
+    @SerializedName("imdbRating")       val imdbRating:       Double? = null,
+    @SerializedName("trailerUrl")       val trailerUrl:       String? = null,
+    @SerializedName("posterUrl")        val posterUrl:        String? = null,
+    @SerializedName("bannerUrl")        val bannerUrl:        String? = null,
+    @SerializedName("thumbnailUrl")     val thumbnailUrl:     String? = null,
+    @SerializedName("totalPlays")       val totalPlays:       Long? = null,
+    @SerializedName("genres")           val genres:           List<GenreDto>? = null,
+    @SerializedName("seasons")          val seasons:          List<SeasonDto>? = null,
+    @SerializedName("videoAssets")      val videoAssets:      List<VideoAssetDto>? = null,
+    @SerializedName("publishedAt")      val publishedAt:      String? = null,
+    @SerializedName("createdAt")        val createdAt:        String? = null,
+)
+
+data class HomeSectionDto(
+    @SerializedName("id")          val id:          Int,
+    @SerializedName("title")       val title:       String,
+    @SerializedName("sectionType") val sectionType: String,
+    @SerializedName("items")       val items:       List<HomeSectionItemDto>,
 )

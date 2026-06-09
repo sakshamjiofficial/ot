@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Logger, Query, Param, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -127,5 +127,57 @@ export class AdminController {
     }
 
     return { success: true };
+  }
+
+  // ─── TMDB Proxy Endpoints ───────────────────────────────
+
+  @Get('tmdb/search')
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  async tmdbSearch(
+    @Query('query') query: string,
+    @Query('type') type: 'movie' | 'series',
+  ) {
+    const configRows = await this.dataSource.query(
+      "SELECT value FROM app_config WHERE key = 'tmdb_api_key' LIMIT 1",
+    );
+    const tmdbApiKey = configRows[0]?.value;
+    if (!tmdbApiKey) {
+      throw new BadRequestException('TMDB API Key is not configured. Go to Settings.');
+    }
+
+    const typePath = type === 'movie' ? 'movie' : 'tv';
+    const res = await fetch(
+      `https://api.themoviedb.org/3/search/${typePath}?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}&language=en-US&page=1`
+    );
+    if (!res.ok) {
+      throw new BadRequestException('TMDB Search request failed');
+    }
+    const data = await res.json();
+    return data;
+  }
+
+  @Get('tmdb/details/:id')
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  async tmdbDetails(
+    @Param('id') id: string,
+    @Query('type') type: 'movie' | 'series',
+  ) {
+    const configRows = await this.dataSource.query(
+      "SELECT value FROM app_config WHERE key = 'tmdb_api_key' LIMIT 1",
+    );
+    const tmdbApiKey = configRows[0]?.value;
+    if (!tmdbApiKey) {
+      throw new BadRequestException('TMDB API Key is not configured. Go to Settings.');
+    }
+
+    const typePath = type === 'movie' ? 'movie' : 'tv';
+    const res = await fetch(
+      `https://api.themoviedb.org/3/${typePath}/${id}?api_key=${tmdbApiKey}&language=en-US`
+    );
+    if (!res.ok) {
+      throw new BadRequestException('TMDB Details request failed');
+    }
+    const data = await res.json();
+    return data;
   }
 }

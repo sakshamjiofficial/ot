@@ -58,6 +58,7 @@ class PlayerViewModel @Inject constructor(
                 is Resource.Success -> {
                     val session = result.data
                     _uiState.update { it.copy(isLoadingStream = false, session = session) }
+                    currentContentId = session.contentId
 
                     // Load into ExoPlayer
                     playerManager.loadHls(
@@ -69,7 +70,7 @@ class PlayerViewModel @Inject constructor(
                     )
 
                     startTicking()
-                    startProgressSync(contentId, episodeId)
+                    startProgressSync(currentContentId, episodeId)
                 }
                 is Resource.Error -> {
                     _uiState.update { it.copy(isLoadingStream = false, error = result.message) }
@@ -104,7 +105,7 @@ class PlayerViewModel @Inject constructor(
 
                 val watchedSec = (positionMs / 1000).toInt()
                 val totalSec   = if (durationMs > 0) (durationMs / 1000).toInt() else null
-                val targetId   = contentId ?: episodeId?.also { return@also } ?: continue
+                val targetId   = contentId ?: episodeId ?: continue
 
                 watchRepository.updateProgress(
                     contentId      = targetId,
@@ -171,19 +172,20 @@ class PlayerViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        // Save final position before clearing
+        // Save final position before clearing — capture values synchronously before releasing player
+        val posMs = playerManager.getCurrentPositionMs()
+        val durMs = playerManager.getDurationMs()
+        val contentId = currentContentId
+        val episodeId = currentEpisodeId
+
         viewModelScope.launch {
-            val posMs = playerManager.getCurrentPositionMs()
-            val durMs = playerManager.getDurationMs()
-            if (posMs > 3000) {
-                currentContentId?.let { id ->
-                    watchRepository.updateProgress(
-                        contentId      = id,
-                        watchedSeconds = (posMs / 1000).toInt(),
-                        totalSeconds   = if (durMs > 0) (durMs / 1000).toInt() else null,
-                        episodeId      = currentEpisodeId,
-                    )
-                }
+            if (posMs > 3000 && contentId != null) {
+                watchRepository.updateProgress(
+                    contentId      = contentId,
+                    watchedSeconds = (posMs / 1000).toInt(),
+                    totalSeconds   = if (durMs > 0) (durMs / 1000).toInt() else null,
+                    episodeId      = episodeId,
+                )
             }
         }
         tickJob?.cancel()

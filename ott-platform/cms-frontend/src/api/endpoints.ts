@@ -28,6 +28,7 @@ export const contentApi = {
   update:      (id: string, data: any) => apiPut<Content>(`/admin/content/${id}`, data),
   delete:      (id: string)  => apiDelete(`/admin/content/${id}`),
   stats:       ()            => apiGet<any>('/admin/content/stats'),
+  getTrending: ()            => apiGet<Content[]>('/home/trending'),
 
   // Seasons
   createSeason: (contentId: string, data: any) =>
@@ -199,4 +200,23 @@ export const plansApi = {
   update:  (id: number, data: any) => apiPut<SubscriptionPlan>(`/admin/subscriptions/plans/${id}`, data),
   delete:  (id: number) => apiDelete(`/admin/subscriptions/plans/${id}`),
 };
+
+// ─── TMDB Proxy ────────────────────────────────────────────────
+
+export const tmdbApi = {
+  search:  (query: string, type: 'movie' | 'series') =>
+    apiGet<any>('/admin/tmdb/search', { query, type }),
+  details: (id: number | string, type: 'movie' | 'series') =>
+    apiGet<any>(`/admin/tmdb/details/${id}`, { type }),
+};
+
+// ─── Home Sections ─────────────────────────────────────────────
+export const homeSectionsApi = {
+  list:    () => apiGet<any[]>('/home-sections'),
+  create:  (data: any) => apiPost<any>('/admin/home-sections', data),
+  update:  (id: number, data: any) => apiPut<any>(`/admin/home-sections/${id}`, data),
+  delete:  (id: number) => apiDelete(`/admin/home-sections/${id}`),
+  reorder: (ids: number[]) => apiPut<{ success: boolean }>('/admin/home-sections/reorder', { ids }),
+};
+
 

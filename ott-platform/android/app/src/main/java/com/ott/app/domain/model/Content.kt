@@ -134,3 +134,11 @@ data class StreamSession(
     val introEnd:    Int?,
     val nextEpisode: Episode?,
 )
+
+data class HomeSection(
+    val id:          Int,
+    val title:       String,
+    val sectionType: String,
+    val items:       List<Content>,
+    val progressItems: List<WatchProgress> = emptyList(),
+)

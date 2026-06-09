@@ -48,6 +48,13 @@ export default function Dashboard() {
     select: (d) => Array.isArray(d) ? d.slice(0, 5) : [],
   });
 
+  const { data: trending = [] } = useQuery({
+    queryKey: ['dashboard-trending'],
+    queryFn:  contentApi.getTrending,
+    refetchInterval: 30_000,
+    select: (d) => Array.isArray(d) ? d.slice(0, 5) : [],
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -162,8 +169,8 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Recent Jobs */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* Recent Jobs, Content Status, and Trending Now */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card>
           <h3 className="mb-4 font-semibold text-white">Recent Transcoding Jobs</h3>
           {jobs.length === 0 ? (
@@ -222,6 +229,43 @@ export default function Dashboard() {
               );
             })}
           </div>
+        </Card>
+
+        {/* Trending Now */}
+        <Card>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-semibold text-white">Trending Now</h3>
+            <span className="rounded-full bg-brand-500/10 px-2.5 py-0.5 text-xs font-semibold text-brand-400">
+              Top Plays
+            </span>
+          </div>
+          {trending.length === 0 ? (
+            <p className="py-6 text-center text-sm text-surface-400">No trending content</p>
+          ) : (
+            <div className="space-y-3">
+              {trending.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 rounded-lg bg-surface-700 px-3 py-2">
+                  <div className="h-10 w-7 shrink-0 overflow-hidden rounded bg-surface-600">
+                    {item.posterUrl ? (
+                      <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-surface-400">
+                        {item.type === 'movie' ? <Film size={12} /> : <Tv size={12} />}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-white">{item.title}</p>
+                    <p className="mt-0.5 text-[10px] text-surface-300 capitalize">{item.type}</p>
+                  </div>
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className="font-mono text-xs font-medium text-white">{formatNumber(item.totalPlays)}</span>
+                    <span className="text-[9px] text-surface-400">plays</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
     </div>

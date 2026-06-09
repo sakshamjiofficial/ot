@@ -1,5 +1,10 @@
 {
   "remote.portsAttributes": {
+    "3000": {
+      "label": "Backend API",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
     "9000": {
       "label": "MinIO API",
       "onAutoForward": "silent",

@@ -45,6 +45,15 @@ class ContentDetailViewModel @Inject constructor(
                 is Resource.Loading -> Unit
             }
         }
+
+        viewModelScope.launch {
+            watchRepository.getWatchlist().collect { result ->
+                if (result is Resource.Success) {
+                    val inWatchlist = result.data.any { it.id == contentId }
+                    _uiState.update { it.copy(isInWatchlist = inWatchlist) }
+                }
+            }
+        }
     }
 
     fun toggleWatchlist(contentId: String) {

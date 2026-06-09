@@ -12,7 +12,11 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Req,
+  Res,
+  Header,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -113,6 +117,26 @@ export class ContentController {
   // ─────────────────────────────────────────────────────────
   // PUBLIC — Homepage feeds
   // ─────────────────────────────────────────────────────────
+
+  @Public()
+  @Get('home/feed')
+  async getHomeFeed(@Req() req: Request) {
+    let userId: string | undefined = undefined;
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+          userId = payload?.sub;
+        }
+      } catch (e) {
+        // Ignore invalid token
+      }
+    }
+    return this.contentService.getHomeFeed(userId);
+  }
 
   @Public()
   @Get('home/trending')
@@ -330,5 +354,14 @@ export class ContentController {
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   getContentStats() {
     return this.contentService.getContentStats();
+  }
+
+  @Public()
+  @Get('download-apk')
+  @Header('Content-Type', 'application/vnd.android.package-archive')
+  @Header('Content-Disposition', 'attachment; filename="app-debug.apk"')
+  downloadApk(@Res() res: Response) {
+    const file = '/workspaces/Kaler/ott-platform/android/app/build/outputs/apk/debug/app-debug.apk';
+    return res.sendFile(file);
   }
 }

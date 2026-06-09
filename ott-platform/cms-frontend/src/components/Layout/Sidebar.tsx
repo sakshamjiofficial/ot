@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Film, Tv, Upload, Users, BarChart2,
   Bell, Settings, Image, LogOut, ChevronLeft, ChevronRight,
-  PlaySquare, ListVideo, Tag, BadgeDollarSign,
+  PlaySquare, ListVideo, Tag, BadgeDollarSign, Smartphone,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/auth.store';
@@ -27,6 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Users',        to: '/users',     icon: <Users size={18} /> },
   { label: 'Analytics',    to: '/analytics', icon: <BarChart2 size={18} /> },
   { label: 'Banners',      to: '/banners',   icon: <Image size={18} /> },
+  { label: 'Android Components', to: '/android-components', icon: <Smartphone size={18} /> },
   { label: 'Genres',       to: '/genres',    icon: <Tag size={18} /> },
   { label: 'Subscriptions',to: '/subscriptions', icon: <BadgeDollarSign size={18} /> },
   { label: 'Notifications',to: '/notifications', icon: <Bell size={18} /> },

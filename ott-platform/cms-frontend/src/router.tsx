@@ -24,6 +24,7 @@ const GenresPage         = lazy(() => import('@/pages/Genres/GenresPage'));
 const AnalyticsPage      = lazy(() => import('@/pages/Analytics/AnalyticsPage'));
 const BannersPage        = lazy(() => import('@/pages/Banners/BannersPage'));
 const EpisodesPage       = lazy(() => import('@/pages/Content/EpisodesPage'));
+const AndroidComponentsPage = lazy(() => import('@/pages/AndroidComponents/AndroidComponentsPage'));
 
 // ─── Auth Guard ───────────────────────────────────────────────
 function RequireAuth() {
@@ -156,6 +157,11 @@ const router = createBrowserRouter([
           {
             path:    'banners',
             element: <Suspense fallback={<PageLoader />}><BannersPage /></Suspense>,
+          },
+          // Android Components
+          {
+            path:    'android-components',
+            element: <Suspense fallback={<PageLoader />}><AndroidComponentsPage /></Suspense>,
           },
           // Analytics
           {

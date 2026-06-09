@@ -33,6 +33,7 @@ interface ContentRepository {
     fun getGenres(): Flow<Resource<List<Genre>>>
     fun getContentByGenre(genreId: Int): Flow<Resource<List<Content>>>
     fun search(query: String): Flow<Resource<List<Content>>>
+    fun getHomeFeed(): Flow<Resource<List<HomeSection>>>
 }
 
 interface StreamRepository {

@@ -229,6 +229,26 @@ export default function SettingsPage() {
         </div>
       </ConfigSection>
 
+      {/* TMDB Integration */}
+      <ConfigSection title="TMDB Integration" icon={<Database size={18} />}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Input
+            label="TMDB API Key (v3)"
+            type="password"
+            value={val('tmdb_api_key')}
+            onChange={(e) => set('tmdb_api_key', e.target.value)}
+            placeholder="Enter your TMDB API Key"
+            hint="Used to import movie metadata, posters, and banners"
+          />
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button icon={<Save size={15} />} loading={saveMutation.isPending}
+            onClick={() => save(['tmdb_api_key'])}>
+            Save TMDB Config
+          </Button>
+        </div>
+      </ConfigSection>
+
       {/* Security Info */}
       <ConfigSection title="Security" icon={<Shield size={18} />}>
         <div className="space-y-3 text-sm text-surface-300">

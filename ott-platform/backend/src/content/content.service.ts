@@ -539,4 +539,115 @@ export class ContentService {
 
     return { totalMovies, totalSeries, published, processing };
   }
+
+  async getHomeFeed(userId?: string): Promise<any[]> {
+    const sections = await this.dataSource.query(
+      `SELECT id, title, section_type as "sectionType", query_config as "queryConfig"
+       FROM home_sections
+       WHERE is_active = true
+       ORDER BY sort_order ASC, id ASC`
+    );
+
+    const compiledFeed = [];
+
+    for (const section of sections) {
+      const type = section.sectionType;
+      const config = section.queryConfig || {};
+      const limit = config.limit || 20;
+      let items = [];
+
+      try {
+        if (type === 'featured') {
+          items = await this.contentRepo.find({
+            where: { isFeatured: true, status: ContentStatus.PUBLISHED },
+            relations: ['genres'],
+            order: { publishedAt: 'DESC' },
+            take: limit,
+          });
+        } else if (type === 'trending') {
+          items = await this.contentRepo.find({
+            where: { isTrending: true, status: ContentStatus.PUBLISHED },
+            relations: ['genres'],
+            order: { totalPlays: 'DESC' },
+            take: limit,
+          });
+        } else if (type === 'recently_added') {
+          items = await this.contentRepo.find({
+            where: { status: ContentStatus.PUBLISHED },
+            relations: ['genres'],
+            order: { publishedAt: 'DESC' },
+            take: limit,
+          });
+        } else if (type === 'series') {
+          items = await this.contentRepo.find({
+            where: { type: ContentType.SERIES, status: ContentStatus.PUBLISHED },
+            relations: ['genres'],
+            order: { publishedAt: 'DESC' },
+            take: limit,
+          });
+        } else if (type === 'genre') {
+          const genreSlug = config.genre_slug;
+          if (genreSlug) {
+            items = await this.contentRepo.createQueryBuilder('c')
+              .leftJoinAndSelect('c.genres', 'genre')
+              .where('c.status = :status', { status: ContentStatus.PUBLISHED })
+              .andWhere('genre.slug = :genreSlug', { genreSlug })
+              .orderBy('c.publishedAt', 'DESC')
+              .take(limit)
+              .getMany();
+          }
+        } else if (type === 'language') {
+          const language = config.language;
+          if (language) {
+            items = await this.contentRepo.find({
+              where: { language, status: ContentStatus.PUBLISHED },
+              relations: ['genres'],
+              order: { publishedAt: 'DESC' },
+              take: limit,
+            });
+          }
+        } else if (type === 'top_rated') {
+          const minRating = config.min_rating || 7.0;
+          items = await this.contentRepo.createQueryBuilder('c')
+            .leftJoinAndSelect('c.genres', 'genre')
+            .where('c.status = :status', { status: ContentStatus.PUBLISHED })
+            .andWhere('c.imdbRating >= :minRating', { minRating })
+            .orderBy('c.imdbRating', 'DESC')
+            .take(limit)
+            .getMany();
+        } else if (type === 'continue_watching') {
+          if (userId) {
+            const history = await this.watchHistoryRepo.find({
+              where: { userId, completed: false },
+              relations: ['content', 'content.genres'],
+              order: { lastWatchedAt: 'DESC' },
+              take: limit,
+            });
+            items = history.map(h => ({
+              id: h.id,
+              contentId: h.contentId,
+              episodeId: h.episodeId,
+              watchedSeconds: h.watchedSeconds,
+              totalSeconds: h.totalSeconds,
+              completed: h.completed,
+              lastWatchedAt: h.lastWatchedAt,
+              content: h.content,
+            }));
+          }
+        }
+
+        compiledFeed.push({
+          id: section.id,
+          title: section.title,
+          sectionType: type,
+          items: items,
+        });
+
+      } catch (err) {
+        this.logger.error(`Failed to compile feed section ${section.title}`, err.stack);
+      }
+    }
+
+    return compiledFeed;
+  }
 }

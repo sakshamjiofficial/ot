@@ -104,7 +104,7 @@ private fun SearchResultRow(item: Content, onClick: () -> Unit) {
                 .background(OttColors.SurfaceVariant, RoundedCornerShape(6.dp)),
         ) {
             AsyncImage(
-                model              = item.thumbnailUrl ?: item.posterUrl,
+                model              = item.posterUrl ?: item.thumbnailUrl,
                 contentDescription = null,
                 contentScale       = ContentScale.Crop,
                 modifier           = Modifier.fillMaxSize(),

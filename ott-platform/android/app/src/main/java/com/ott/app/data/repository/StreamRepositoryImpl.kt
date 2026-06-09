@@ -53,14 +53,20 @@ class StreamRepositoryImpl @Inject constructor(
                 else -> (contentResponse.body()?.data as? com.ott.app.data.remote.dto.ContentDto)?.title ?: "Movie"
             }
 
+            val realContentId = if (episodeId != null) {
+                (contentResponse.body()?.data as? com.ott.app.data.remote.dto.EpisodeDto)?.contentId ?: contentId
+            } else {
+                contentId
+            }
+
             // Build stream session
             val session = StreamSession(
-                contentId   = contentId,
+                contentId   = realContentId,
                 episodeId   = episodeId,
                 title       = title,
                 masterUrl   = "${com.ott.app.BuildConfig.API_BASE_URL}/${
                     if (episodeId != null) "stream/episodes/$episodeId/master.m3u8"
-                    else "stream/content/$contentId/master.m3u8"
+                    else "stream/content/$realContentId/master.m3u8"
                 }",
                 subtitles   = info.subtitles.map { Subtitle(it.id, it.languageCode, it.languageName, it.vttUrl, it.isDefault) },
                 audioTracks = info.audioTracks.map { AudioTrack(it.id, it.languageCode, it.languageName, it.isDefault) },

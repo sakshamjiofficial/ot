@@ -49,6 +49,9 @@ interface OttApiService {
     @GET("episodes/{id}")
     suspend fun getEpisode(@Path("id") id: String): Response<ApiResponse<EpisodeDto>>
 
+    @GET("home/feed")
+    suspend fun getHomeFeed(): Response<ApiResponse<List<HomeSectionDto>>>
+
     @GET("home/trending")
     suspend fun getTrending(): Response<ApiResponse<List<ContentDto>>>
 
