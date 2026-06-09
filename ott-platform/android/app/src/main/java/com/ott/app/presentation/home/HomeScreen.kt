@@ -62,13 +62,20 @@ fun HomeScreen(
                 }
             )
         },
-        containerColor = OttColors.Background
+        containerColor = Color.Transparent
     ) { paddingValues ->
+        val mainBackgroundGradient = Brush.verticalGradient(
+            colors = listOf(
+                Color(0xFF1A0808), // subtle deep reddish-brown
+                Color(0xFF000000), // transitions to black
+                Color(0xFF000000)  // pure black at bottom
+            )
+        )
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
-                .background(OttColors.Background)
+                .background(mainBackgroundGradient)
         ) {
             if (uiState.isLoading && uiState.featured.isEmpty()) {
                 HomeSkeletonLoader()
@@ -78,205 +85,77 @@ fun HomeScreen(
                     contentPadding      = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
-                    // ── Top App Bar ──────────────────────────────
-                    item {
-                        HomeTopBar(
-                            userName       = uiState.currentUser?.displayName ?: "JudyS",
-                            avatarUrl      = uiState.currentUser?.avatarUrl,
-                            onSearchClick  = onSearchClick,
-                            onProfileClick = onProfileClick,
-                        )
-                    }
-
-                    // ── Top Navigation Tabs ─────────────────────
+                    // ── Sticky Top Navigation Header ──────────────
                     stickyHeader {
                         var selectedTabIndex by remember { mutableStateOf(0) }
 
                         // Sync selectedTabIndex when filters change externally
-                        LaunchedEffect(selectedFilter, selectedGenre) {
-                            if (selectedGenre != null) {
-                                selectedTabIndex = 4
-                            } else {
-                                when (selectedFilter) {
-                                    "Series" -> selectedTabIndex = 0
-                                    "Films" -> selectedTabIndex = 1
-                                    "Games" -> selectedTabIndex = 2
-                                    "New & Hot" -> selectedTabIndex = 3
-                                    else -> selectedTabIndex = 0
-                                }
+                        LaunchedEffect(selectedFilter) {
+                            selectedTabIndex = when (selectedFilter) {
+                                "Series" -> 0
+                                "Films" -> 1
+                                "Games" -> 2
+                                "New & Hot" -> 3
+                                else -> 0
                             }
                         }
 
-                        ScrollableTabRow(
-                            selectedTabIndex = selectedTabIndex,
-                            containerColor = Color.Black,
-                            contentColor = Color.White,
-                            edgePadding = 16.dp,
-                            indicator = {},
-                            divider = {},
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp) // Slightly taller to account for larger pill buttons
+                                .background(Color(0xFF1A0808))
+                                .statusBarsPadding()
                         ) {
-                            // Shows Tab
-                            Tab(
-                                selected = selectedTabIndex == 0,
-                                onClick = {
-                                    selectedTabIndex = 0
-                                    selectedFilter = "Series"
-                                    selectedGenre = null
-                                },
-                                modifier = Modifier
-                                    .padding(horizontal = 6.dp, vertical = 6.dp)
-                                    .clip(RoundedCornerShape(50.dp))
-                                    .background(if (selectedTabIndex == 0) OttColors.Brand else Color(0xFF1A1A1A))
-                                    .border(
-                                        width = 1.dp,
-                                        color = if (selectedTabIndex == 0) Color.Transparent else Color.White.copy(alpha = 0.15f),
-                                        shape = RoundedCornerShape(50.dp)
-                                    )
-                            ) {
-                                Text(
-                                    text = "Shows",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp, // Increased font size from 13.sp to 14.sp
-                                    color = if (selectedTabIndex == 0) Color.White else Color.White.copy(alpha = 0.7f),
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp) // Increased padding
-                                )
-                            }
+                            HomeTopBar(
+                                userName       = uiState.currentUser?.displayName ?: "JudyS",
+                                avatarUrl      = uiState.currentUser?.avatarUrl,
+                                onSearchClick  = onSearchClick,
+                                onProfileClick = onProfileClick,
+                            )
 
-                            // Movies Tab
-                            Tab(
-                                selected = selectedTabIndex == 1,
-                                onClick = {
-                                    selectedTabIndex = 1
-                                    selectedFilter = "Films"
-                                    selectedGenre = null
-                                },
+                            ScrollableTabRow(
+                                selectedTabIndex = selectedTabIndex,
+                                containerColor = Color.Transparent,
+                                contentColor = Color.White,
+                                edgePadding = 16.dp,
+                                indicator = {},
+                                divider = {},
                                 modifier = Modifier
-                                    .padding(horizontal = 6.dp, vertical = 6.dp)
-                                    .clip(RoundedCornerShape(50.dp))
-                                    .background(if (selectedTabIndex == 1) OttColors.Brand else Color(0xFF1A1A1A))
-                                    .border(
-                                        width = 1.dp,
-                                        color = if (selectedTabIndex == 1) Color.Transparent else Color.White.copy(alpha = 0.15f),
-                                        shape = RoundedCornerShape(50.dp)
-                                    )
+                                    .fillMaxWidth()
+                                    .height(56.dp)
                             ) {
-                                Text(
-                                    text = "Movies",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = if (selectedTabIndex == 1) Color.White else Color.White.copy(alpha = 0.7f),
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+                                val tabs = listOf(
+                                    Triple("Shows", "Series", 0),
+                                    Triple("Movies", "Films", 1),
+                                    Triple("Games", "Games", 2),
+                                    Triple("New & Hot", "New & Hot", 3)
                                 )
-                            }
 
-                            // Games Tab
-                            Tab(
-                                selected = selectedTabIndex == 2,
-                                onClick = {
-                                    selectedTabIndex = 2
-                                    selectedFilter = "Games"
-                                    selectedGenre = null
-                                },
-                                modifier = Modifier
-                                    .padding(horizontal = 6.dp, vertical = 6.dp)
-                                    .clip(RoundedCornerShape(50.dp))
-                                    .background(if (selectedTabIndex == 2) OttColors.Brand else Color(0xFF1A1A1A))
-                                    .border(
-                                        width = 1.dp,
-                                        color = if (selectedTabIndex == 2) Color.Transparent else Color.White.copy(alpha = 0.15f),
-                                        shape = RoundedCornerShape(50.dp)
-                                    )
-                            ) {
-                                Text(
-                                    text = "Games",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = if (selectedTabIndex == 2) Color.White else Color.White.copy(alpha = 0.7f),
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-                                )
-                            }
-
-                            // New & Hot Tab
-                            Tab(
-                                selected = selectedTabIndex == 3,
-                                onClick = {
-                                    selectedTabIndex = 3
-                                    selectedFilter = "New & Hot"
-                                    selectedGenre = null
-                                },
-                                modifier = Modifier
-                                    .padding(horizontal = 6.dp, vertical = 6.dp)
-                                    .clip(RoundedCornerShape(50.dp))
-                                    .background(if (selectedTabIndex == 3) OttColors.Brand else Color(0xFF1A1A1A))
-                                    .border(
-                                        width = 1.dp,
-                                        color = if (selectedTabIndex == 3) Color.Transparent else Color.White.copy(alpha = 0.15f),
-                                        shape = RoundedCornerShape(50.dp)
-                                    )
-                            ) {
-                                Text(
-                                    text = "New & Hot",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = if (selectedTabIndex == 3) Color.White else Color.White.copy(alpha = 0.7f),
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-                                )
-                            }
-
-                            // Categories Tab with Dropdown
-                            Box {
-                                Tab(
-                                    selected = selectedTabIndex == 4,
-                                    onClick = {
-                                        selectedTabIndex = 4
-                                        showCategoriesMenu = true
-                                    },
-                                    modifier = Modifier
-                                        .padding(horizontal = 6.dp, vertical = 6.dp)
-                                        .clip(RoundedCornerShape(50.dp))
-                                        .background(if (selectedTabIndex == 4) OttColors.Brand else Color(0xFF1A1A1A))
-                                        .border(
-                                            width = 1.dp,
-                                            color = if (selectedTabIndex == 4) Color.Transparent else Color.White.copy(alpha = 0.15f),
-                                            shape = RoundedCornerShape(50.dp)
-                                        )
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+                                tabs.forEach { (title, filter, index) ->
+                                    val isSelected = selectedTabIndex == index
+                                    Tab(
+                                        selected = isSelected,
+                                        onClick = {
+                                            selectedTabIndex = index
+                                            selectedFilter = filter
+                                            selectedGenre = null
+                                        },
+                                        modifier = Modifier
+                                            .padding(horizontal = 6.dp, vertical = 6.dp)
+                                            .clip(RoundedCornerShape(50.dp))
+                                            .background(if (isSelected) OttColors.Brand else Color(0xFF2B2B2B).copy(alpha = 0.7f))
+                                            .border(
+                                                width = 1.dp,
+                                                color = if (isSelected) Color.Transparent else Color.White.copy(alpha = 0.15f),
+                                                shape = RoundedCornerShape(50.dp)
+                                            )
                                     ) {
                                         Text(
-                                            text = if (selectedGenre != null) selectedGenre!!.name else "Categories",
+                                            text = title,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp,
-                                            color = if (selectedTabIndex == 4) Color.White else Color.White.copy(alpha = 0.7f)
-                                        )
-                                        Spacer(Modifier.width(2.dp))
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null,
-                                            tint = if (selectedTabIndex == 4) Color.White else Color.White.copy(alpha = 0.7f),
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-
-                                DropdownMenu(
-                                    expanded = showCategoriesMenu,
-                                    onDismissRequest = { showCategoriesMenu = false },
-                                    modifier = Modifier.background(OttColors.SurfaceVariant)
-                                ) {
-                                    uiState.genres.forEach { genre ->
-                                        DropdownMenuItem(
-                                            text = { Text(genre.name, color = Color.White) },
-                                            onClick = {
-                                                showCategoriesMenu = false
-                                                selectedGenre = genre
-                                                selectedFilter = null
-                                            }
+                                            fontSize = 13.sp,
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                         )
                                     }
                                 }
@@ -368,62 +247,66 @@ private fun HomeTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment     = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "For $userName.",
-            color = Color.White,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 24.sp,
-            style = LocalTextStyle.current.copy(
-                shadow = Shadow(
-                    color = Color.Black.copy(alpha = 0.3f),
-                    blurRadius = 4f
-                )
-            )
-        )
-
+        // Left side: Vertical red brand logo icon + bold white title "Home"
         Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment     = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Cast,
-                contentDescription = "Cast",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp).clickable { /* Cast action */ }
-            )
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp).clickable(onClick = onSearchClick)
-            )
             Box(
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFF3B82F6))
-                    .clickable(onClick = onProfileClick),
-                contentAlignment = Alignment.Center
-            ) {
-                if (!avatarUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model              = avatarUrl,
-                        contentDescription = "Profile",
-                        contentScale       = ContentScale.Crop,
-                        modifier           = Modifier.fillMaxSize()
-                    )
-                } else {
+                    .width(8.dp)
+                    .height(26.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(OttColors.Brand)
+            )
+            Text(
+                text = "Home",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp
+            )
+        }
+
+        // Right side: white Download tray icon + white Notification Bell with red badge '5'
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment     = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { /* Handle downloads click */ }) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = "Downloads",
+                    tint = Color.White
+                )
+            }
+            IconButton(onClick = { /* Handle notifications click */ }) {
+                Box(modifier = Modifier.padding(4.dp)) {
                     Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.size(20.dp)
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Notifications",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 4.dp, y = (-4).dp)
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(Color.Red),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "5",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -619,8 +502,6 @@ private fun HeroBanner(
         }
     }
 
-    val configuration = LocalConfiguration.current
-    val bannerHeight = (configuration.screenHeightDp * 0.65f).dp
     val glossyBorderBrush = Brush.linearGradient(
         colors = listOf(
             Color.White.copy(alpha = 0.22f),
@@ -632,39 +513,22 @@ private fun HeroBanner(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(bannerHeight)
             .padding(vertical = 12.dp)
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth().aspectRatio(0.72f),
+            contentPadding = PaddingValues(horizontal = 24.dp)
         ) { page ->
             val item = items[page]
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 6.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFFFF2A54), // Vibrant Pink/Red
-                                Color(0xFF7E0A2B), // Deep Maroon
-                                Color(0xFF1F030E)  // Dark Plum
-                            )
-                        )
-                    )
+                    .padding(horizontal = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, glossyBorderBrush, RoundedCornerShape(12.dp))
+                    .clickable { onContentClick(item.id) }
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(1.dp, glossyBorderBrush, RoundedCornerShape(10.dp))
-                        .clickable { onContentClick(item.id) }
-                ) {
-
                 // Portrait Poster
                 AsyncImage(
                     model              = item.posterUrl ?: item.thumbnailUrl ?: item.bannerUrl,
@@ -673,94 +537,60 @@ private fun HeroBanner(
                     modifier           = Modifier.fillMaxSize(),
                 )
 
-                // Top Gradient Overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Black.copy(alpha = 0.4f), Color.Transparent)
-                            )
-                        )
-                )
-
-                // Bottom Gradient Overlay
+                // Heavy, dark vertical gradient scrim overlay
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
                                 0.0f to Color.Transparent,
-                                0.5f to Color.Black.copy(alpha = 0.3f),
-                                0.8f to Color.Black.copy(alpha = 0.85f),
-                                1.0f to Color.Black,
+                                0.4f to Color.Black.copy(alpha = 0.2f),
+                                0.7f to Color.Black.copy(alpha = 0.8f),
+                                1.0f to Color.Black
                             )
                         )
                 )
 
-                // Featured Content Info
+                // Foreground Content
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(horizontal = 20.dp, vertical = 24.dp)
+                        .padding(horizontal = 16.dp, vertical = 20.dp)
                         .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Branding: Red "K" + type
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "K",
-                            color = OttColors.Brand,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 20.sp,
-                            style = LocalTextStyle.current.copy(
-                                shadow = Shadow(
-                                    color = Color.Black.copy(alpha = 0.6f),
-                                    blurRadius = 6f
-                                )
-                            )
-                        )
-                        Text(
-                            text = if (item.type == ContentType.SERIES) "SERIES" else "FILM",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            letterSpacing = 2.sp
-                        )
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
+                    // Stylized Title
                     Text(
-                        text       = item.title,
-                        color      = Color.White,
+                        text = item.title,
+                        color = Color.White,
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize   = 30.sp,
-                        fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
-                        textAlign  = TextAlign.Center,
-                        maxLines   = 2,
-                        overflow   = TextOverflow.Ellipsis,
-                        lineHeight = 34.sp,
-                        style      = LocalTextStyle.current.copy(
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.5f),
-                                blurRadius = 8f
-                            )
-                        )
+                        fontSize = 28.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.SansSerif,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 32.sp
                     )
 
                     Spacer(Modifier.height(8.dp))
 
+                    // Metadata Subtitle (Tags separated by bullets)
                     val genresText = item.genres.joinToString(" • ") { it.name }
                     if (genresText.isNotEmpty()) {
                         Text(
-                            text     = genresText,
-                            color    = Color.White.copy(alpha = 0.9f),
-                            fontSize = 13.sp,
+                            text = genresText,
+                            color = Color.LightGray,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        Text(
+                            text = "Suspenseful • Thriller • Immigrant Life • Drama",
+                            color = Color.LightGray,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             textAlign = TextAlign.Center,
                             maxLines = 1,
@@ -768,87 +598,75 @@ private fun HeroBanner(
                         )
                     }
 
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(16.dp))
 
+                    // Action Button Row
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val isInWatchlist = watchlistIds.contains(item.id)
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .clickable { viewModel.toggleWatchlist(item.id) }
-                                .padding(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isInWatchlist) Icons.Default.Check else Icons.Default.Add,
-                                contentDescription = "My List",
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "My List",
-                                color = Color.White,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-
+                        // Play Button
                         Button(
                             onClick = { onContentClick(item.id) },
-                            colors  = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            shape   = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .width(140.dp)
-                                .height(44.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.weight(1f).height(44.dp),
+                            contentPadding = PaddingValues(0.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Play",
-                                tint = Color.Black,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = "Play",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = Color.Black,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = "Play",
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .clickable { onContentClick(item.id) }
-                                .padding(8.dp)
+                        // My List Button
+                        val isInWatchlist = watchlistIds.contains(item.id)
+                        Button(
+                            onClick = { viewModel.toggleWatchlist(item.id) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2B2B2B).copy(alpha = 0.7f)),
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.weight(1f).height(44.dp),
+                            contentPadding = PaddingValues(0.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "Info",
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "Info",
-                                color = Color.White,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isInWatchlist) Icons.Default.Check else Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = "My List",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
-}
 }
 
 // ─── Content Row ──────────────────────────────────────────────
@@ -1132,15 +950,17 @@ private fun HomeSkeletonLoader() {
     val shimmerBrush = Brush.horizontalGradient(
         colors = listOf(OttColors.Surface, OttColors.SurfaceVariant, OttColors.Surface),
     )
-    val configuration = LocalConfiguration.current
-    val bannerHeight = (configuration.screenHeightDp * 0.65f).dp
-
-
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
-            Box(modifier = Modifier.fillMaxWidth().height(bannerHeight).background(shimmerBrush))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(0.72f)
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(shimmerBrush)
+            )
         }
-
         items(3) {
             Column(modifier = Modifier.padding(vertical = 12.dp)) {
                 Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).width(140.dp).height(18.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush))
