@@ -78,6 +78,19 @@ export default function ContentList({ type }: ContentListProps) {
       }
 
       const releaseDate = isMovie ? data.release_date : data.first_air_date;
+      let featurePosterUrl: string | undefined = undefined;
+      let featureTextImageUrl: string | undefined = undefined;
+      if (data.images) {
+        const noLangPoster = data.images.posters?.find((p: any) => !p.iso_639_1);
+        if (noLangPoster) {
+          featurePosterUrl = `https://image.tmdb.org/t/p/original${noLangPoster.file_path}`;
+        }
+        const enLogo = data.images.logos?.find((l: any) => l.iso_639_1 === 'en');
+        if (enLogo) {
+          featureTextImageUrl = `https://image.tmdb.org/t/p/original${enLogo.file_path}`;
+        }
+      }
+
       const payload = {
         type,
         title: isMovie ? data.title : data.name,
@@ -88,6 +101,8 @@ export default function ContentList({ type }: ContentListProps) {
         imdbRating: data.vote_average ? parseFloat(data.vote_average.toFixed(1)) : undefined,
         posterUrl: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : undefined,
         bannerUrl: data.backdrop_path ? `https://image.tmdb.org/t/p/original${data.backdrop_path}` : undefined,
+        featurePosterUrl,
+        featureTextImageUrl,
         status: 'draft',
         genreIds: matchedGenreIds,
       };

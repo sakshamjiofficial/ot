@@ -5,6 +5,11 @@
       "onAutoForward": "silent",
       "visibility": "public"
     },
+    "5174": {
+      "label": "CMS Admin Panel",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
     "9000": {
       "label": "MinIO API",
       "onAutoForward": "silent",
@@ -14,6 +19,12 @@
       "label": "MinIO Console",
       "onAutoForward": "silent",
       "visibility": "private"
+    },
+    "9091": {
+      "label": "Worker Metrics",
+      "onAutoForward": "silent",
+      "visibility": "private"
     }
-  }
+  },
+  "remote.autoForwardPorts": true
 }
