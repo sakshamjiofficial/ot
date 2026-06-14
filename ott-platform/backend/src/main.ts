@@ -26,11 +26,12 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'https:'],
-          mediaSrc: ["'self'", 'https:'],
-          connectSrc: ["'self'"],
+          scriptSrc:  ["'self'"],
+          styleSrc:   ["'self'", "'unsafe-inline'"],
+          imgSrc:     ["'self'", 'data:', 'https:'],
+          mediaSrc:   ["'self'", 'https:'],
+          // Allow connections from Codespace domains and localhost
+          connectSrc: ["'self'", 'https:', 'wss:'],
         },
       },
       crossOriginEmbedderPolicy: false,
@@ -40,6 +41,7 @@ async function bootstrap() {
   // ─── CORS ─────────────────────────────────────────────────
   app.enableCors({
     origin: (origin, callback) => {
+      // In development: allow all origins (includes Codespaces *.app.github.dev)
       if (nodeEnv === 'development') {
         callback(null, true);
         return;
@@ -49,10 +51,7 @@ async function bootstrap() {
         `https://www.${configService.get('DOMAIN')}`,
         `https://admin.${configService.get('DOMAIN')}`,
       ];
-      if (nodeEnv === 'development') {
-        allowedOrigins.push('http://localhost:3001', 'http://localhost:5173');
-      }
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.some(o => origin.startsWith(o)) || origin.endsWith('.app.github.dev')) {
         callback(null, true);
       } else {
         callback(new Error(`CORS: origin ${origin} not allowed`));
@@ -124,7 +123,9 @@ async function bootstrap() {
   // ─── Graceful Shutdown ────────────────────────────────────
   app.enableShutdownHooks();
 
-  await app.listen(port);
+  // Bind to 0.0.0.0 so the port is reachable on all interfaces
+  // (required for GitHub Codespaces port forwarding to work correctly)
+  await app.listen(port, '0.0.0.0');
   logger.log(`Application running on port ${port} [${nodeEnv}]`);
 }
 

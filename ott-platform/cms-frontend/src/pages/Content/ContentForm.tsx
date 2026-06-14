@@ -11,23 +11,25 @@ import type { ContentType }    from '@/types';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
-  title:            z.string().min(1, 'Title is required').max(500),
-  description:      z.string().optional(),
-  shortDescription: z.string().max(300).optional(),
-  language:         z.string().default('en'),
-  releaseYear:      z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().min(1900).max(2100).optional()),
-  durationSeconds:  z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().optional()),
-  ageRating:        z.string().optional(),
-  status:           z.enum(['draft','processing','published','scheduled','archived']).default('draft'),
-  isPremium:        z.boolean().default(false),
-  isFeatured:       z.boolean().default(false),
-  isTrending:       z.boolean().default(false),
-  imdbRating:       z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().min(0).max(10).optional()),
-  trailerUrl:       z.string().url().optional().or(z.literal('')),
-  posterUrl:        z.string().url().optional().or(z.literal('')),
-  bannerUrl:        z.string().url().optional().or(z.literal('')),
-  genreIds:         z.array(z.coerce.number()).default([]),
-  scheduledAt:      z.string().optional(),
+  title:               z.string().min(1, 'Title is required').max(500),
+  description:         z.string().optional(),
+  shortDescription:    z.string().max(300).optional(),
+  language:            z.string().default('en'),
+  releaseYear:         z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().min(1900).max(2100).optional()),
+  durationSeconds:     z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().optional()),
+  ageRating:           z.string().optional(),
+  status:              z.enum(['draft','processing','published','scheduled','archived']).default('draft'),
+  isPremium:           z.boolean().default(false),
+  isFeatured:          z.boolean().default(false),
+  isTrending:          z.boolean().default(false),
+  imdbRating:          z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().min(0).max(10).optional()),
+  trailerUrl:          z.string().url().optional().or(z.literal('')),
+  posterUrl:           z.string().url().optional().or(z.literal('')),
+  bannerUrl:           z.string().url().optional().or(z.literal('')),
+  featurePosterUrl:    z.string().url().optional().or(z.literal('')),
+  featureTextImageUrl: z.string().url().optional().or(z.literal('')),
+  genreIds:            z.array(z.coerce.number()).default([]),
+  scheduledAt:         z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -104,6 +106,17 @@ export default function ContentForm({ type }: ContentFormProps) {
         setValue('bannerUrl', `https://image.tmdb.org/t/p/original${data.backdrop_path}`, { shouldDirty: true });
       }
 
+      if (data.images) {
+        const noLangPoster = data.images.posters?.find((p: any) => !p.iso_639_1);
+        if (noLangPoster) {
+          setValue('featurePosterUrl', `https://image.tmdb.org/t/p/original${noLangPoster.file_path}`, { shouldDirty: true });
+        }
+        const enLogo = data.images.logos?.find((l: any) => l.iso_639_1 === 'en');
+        if (enLogo) {
+          setValue('featureTextImageUrl', `https://image.tmdb.org/t/p/original${enLogo.file_path}`, { shouldDirty: true });
+        }
+      }
+
       // Try to match genres if possible
       if (data.genres && genres.length > 0) {
         const matchedGenreIds: number[] = [];
@@ -149,14 +162,16 @@ export default function ContentForm({ type }: ContentFormProps) {
     if (existing) {
       reset({
         ...existing,
-        genreIds:        existing.genres?.map((g) => g.id) ?? [],
-        durationSeconds: existing.durationSeconds ?? undefined,
-        releaseYear:     existing.releaseYear ?? undefined,
-        imdbRating:      existing.imdbRating ?? undefined,
-        trailerUrl:      existing.trailerUrl ?? '',
-        posterUrl:       existing.posterUrl  ?? '',
-        bannerUrl:       existing.bannerUrl  ?? '',
-        scheduledAt:     existing.scheduledAt?.slice(0, 16) ?? '',
+        genreIds:            existing.genres?.map((g) => g.id) ?? [],
+        durationSeconds:     existing.durationSeconds ?? undefined,
+        releaseYear:         existing.releaseYear ?? undefined,
+        imdbRating:          existing.imdbRating ?? undefined,
+        trailerUrl:          existing.trailerUrl          ?? '',
+        posterUrl:           existing.posterUrl           ?? '',
+        bannerUrl:           existing.bannerUrl           ?? '',
+        featurePosterUrl:    existing.featurePosterUrl    ?? '',
+        featureTextImageUrl: existing.featureTextImageUrl ?? '',
+        scheduledAt:         existing.scheduledAt?.slice(0, 16) ?? '',
       });
     }
   }, [existing, reset]);
@@ -166,13 +181,15 @@ export default function ContentForm({ type }: ContentFormProps) {
       const payload = {
         ...data,
         type,
-        description:      data.description      || undefined,
-        shortDescription: data.shortDescription || undefined,
-        ageRating:        data.ageRating        || undefined,
-        trailerUrl:       data.trailerUrl       || undefined,
-        posterUrl:        data.posterUrl        || undefined,
-        bannerUrl:        data.bannerUrl        || undefined,
-        scheduledAt:      data.scheduledAt      || undefined,
+        description:         data.description         || undefined,
+        shortDescription:    data.shortDescription    || undefined,
+        ageRating:           data.ageRating           || undefined,
+        trailerUrl:          data.trailerUrl          || undefined,
+        posterUrl:           data.posterUrl           || undefined,
+        bannerUrl:           data.bannerUrl           || undefined,
+        featurePosterUrl:    data.featurePosterUrl    || undefined,
+        featureTextImageUrl: data.featureTextImageUrl || undefined,
+        scheduledAt:         data.scheduledAt         || undefined,
       };
       return isEdit
         ? contentApi.update(id!, payload)
@@ -189,12 +206,14 @@ export default function ContentForm({ type }: ContentFormProps) {
       toast.error(err?.response?.data?.message || 'Save failed'),
   });
 
-  const genreIds  = watch('genreIds') ?? [];
-  const isPremium = watch('isPremium');
-  const isTrending = watch('isTrending');
-  const isFeatured = watch('isFeatured');
-  const posterUrl = watch('posterUrl');
-  const bannerUrl = watch('bannerUrl');
+  const genreIds           = watch('genreIds') ?? [];
+  const isPremium          = watch('isPremium');
+  const isTrending         = watch('isTrending');
+  const isFeatured         = watch('isFeatured');
+  const posterUrl          = watch('posterUrl');
+  const bannerUrl          = watch('bannerUrl');
+  const featurePosterUrl    = watch('featurePosterUrl');
+  const featureTextImageUrl = watch('featureTextImageUrl');
 
   const toggleGenre = (id: number) => {
     setValue(
@@ -285,53 +304,140 @@ export default function ContentForm({ type }: ContentFormProps) {
               {/* URLs */}
               <Card>
                 <h3 className="mb-4 font-semibold text-white">Media URLs</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {/* Row 1: Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div className="space-y-4">
                     <Input label="Trailer URL" type="url" {...register('trailerUrl')} placeholder="https://…" />
                     <Input label="Poster URL" type="url" {...register('posterUrl')} placeholder="https://…/poster.webp (2:3 portrait)" />
                     <Input label="Banner URL" type="url" {...register('bannerUrl')} placeholder="https://…/banner.webp (16:9 landscape)" />
                   </div>
-                  <div className="flex flex-col justify-end">
-                    <div className="flex flex-col sm:flex-row gap-6">
-                      {/* Poster Preview */}
+                  {/* Poster + Banner Previews */}
+                  <div className="flex flex-col sm:flex-row gap-6 items-end">
+                    {/* Poster Preview */}
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs font-medium text-surface-400">Poster Preview (2:3)</span>
+                      <div className="relative aspect-[2/3] w-32 overflow-hidden rounded-xl border border-surface-700 bg-surface-800/50 shadow-inner flex items-center justify-center group">
+                        {posterUrl ? (
+                          <img
+                            src={posterUrl}
+                            alt="Poster"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://placehold.co/300x450/1e293b/64748b?text=Invalid+Image';
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-surface-500">
+                            <Film size={20} />
+                            <span className="text-[10px] uppercase tracking-wider font-semibold">2:3 Portrait</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Banner Preview */}
+                    <div className="flex flex-col gap-2 flex-1">
+                      <span className="text-xs font-medium text-surface-400">Banner Preview (16:9)</span>
+                      <div className="relative aspect-[16/9] w-full max-w-sm overflow-hidden rounded-xl border border-surface-700 bg-surface-800/50 shadow-inner flex items-center justify-center group">
+                        {bannerUrl ? (
+                          <img
+                            src={bannerUrl}
+                            alt="Banner"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://placehold.co/600x338/1e293b/64748b?text=Invalid+Image';
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-surface-500">
+                            <Film size={20} />
+                            <span className="text-[10px] uppercase tracking-wider font-semibold">16:9 Landscape</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-surface-700/60 my-2" />
+
+                {/* Row 2: Feature Content Fields */}
+                <div className="mt-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-500/10 border border-brand-500/25 px-2.5 py-1 text-xs font-semibold text-brand-400 uppercase tracking-widest">
+                      ✦ Featured Content
+                    </span>
+                    <p className="text-xs text-surface-400">Used when this content is shown in hero banners / spotlight sections</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <Input
+                        label="Feature Content Poster URL"
+                        type="url"
+                        {...register('featurePosterUrl')}
+                        placeholder="https://…/feature-poster.webp (21:9 or 16:9 wide artwork)"
+                        hint="Wide-format hero image displayed behind the title in the featured spotlight. Recommended: 1920×800 or 2560×1080."
+                      />
+                      <Input
+                        label="Feature Content Text Image URL"
+                        type="url"
+                        {...register('featureTextImageUrl')}
+                        placeholder="https://…/title-logo.png (transparent PNG)"
+                        hint="Stylised title logo / text treatment image (transparent PNG). Replaces the plain text title in hero banners. Recommended: 600×200 max."
+                      />
+                    </div>
+
+                    {/* Feature Previews */}
+                    <div className="space-y-4">
+                      {/* Feature Poster Preview */}
                       <div className="flex flex-col gap-2">
-                        <span className="text-xs font-medium text-surface-400">Poster Preview (2:3)</span>
-                        <div className="relative aspect-[2/3] w-32 overflow-hidden rounded-xl border border-surface-700 bg-surface-800/50 shadow-inner flex items-center justify-center group">
-                          {posterUrl ? (
+                        <span className="text-xs font-medium text-surface-400">Feature Poster Preview (21:9)</span>
+                        <div className="relative aspect-[21/9] w-full overflow-hidden rounded-xl border border-surface-700 bg-surface-800/50 shadow-inner flex items-center justify-center group">
+                          {featurePosterUrl ? (
                             <img
-                              src={posterUrl}
-                              alt="Poster"
+                              src={featurePosterUrl}
+                              alt="Feature Poster"
                               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://placehold.co/300x450/1e293b/64748b?text=Invalid+Image';
+                                (e.target as HTMLImageElement).src = 'https://placehold.co/840x360/1e293b/64748b?text=Invalid+Image';
                               }}
                             />
                           ) : (
-                            <div className="flex flex-col items-center gap-1 text-surface-500">
-                              <Film size={20} />
-                              <span className="text-[10px] uppercase tracking-wider font-semibold">2:3 Portrait</span>
+                            <div className="flex flex-col items-center gap-1.5 text-surface-500">
+                              <Film size={22} />
+                              <span className="text-[10px] uppercase tracking-wider font-semibold">21:9 Feature Banner</span>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* Banner Preview */}
-                      <div className="flex flex-col gap-2 flex-1">
-                        <span className="text-xs font-medium text-surface-400">Banner Preview (16:9)</span>
-                        <div className="relative aspect-[16/9] w-full max-w-sm overflow-hidden rounded-xl border border-surface-700 bg-surface-800/50 shadow-inner flex items-center justify-center group">
-                          {bannerUrl ? (
+                      {/* Feature Text Image Preview */}
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs font-medium text-surface-400">Title Treatment Preview</span>
+                        <div
+                          className="relative w-full h-24 overflow-hidden rounded-xl border border-surface-700 flex items-center justify-center group"
+                          style={{
+                            background: featurePosterUrl
+                              ? `linear-gradient(to right, rgba(15,17,26,0.95) 0%, rgba(15,17,26,0.6) 60%, rgba(15,17,26,0.1) 100%), url(${featurePosterUrl}) center/cover no-repeat`
+                              : 'linear-gradient(135deg, #0f111a 0%, #1a1e2e 100%)',
+                          }}
+                        >
+                          {featureTextImageUrl ? (
                             <img
-                              src={bannerUrl}
-                              alt="Banner"
-                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              src={featureTextImageUrl}
+                              alt="Title Treatment"
+                              className="max-h-16 max-w-[80%] object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] transition-transform duration-300 group-hover:scale-105"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://placehold.co/600x338/1e293b/64748b?text=Invalid+Image';
+                                (e.target as HTMLImageElement).style.display = 'none';
                               }}
                             />
                           ) : (
                             <div className="flex flex-col items-center gap-1 text-surface-500">
-                              <Film size={20} />
-                              <span className="text-[10px] uppercase tracking-wider font-semibold">16:9 Landscape</span>
+                              <span className="text-[10px] uppercase tracking-wider font-semibold">Title Logo / Text Treatment</span>
+                              <span className="text-[9px] text-surface-600">Transparent PNG</span>
                             </div>
                           )}
                         </div>

@@ -115,6 +115,16 @@ export class CreateContentDto {
   @IsUrl()
   thumbnailUrl?: string;
 
+  @ApiPropertyOptional({ description: 'Feature/hero poster image URL (21:9 or 16:9 wide artwork for featured banners)' })
+  @IsOptional()
+  @IsUrl()
+  featurePosterUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Title treatment / logo text image URL (transparent PNG of styled title)' })
+  @IsOptional()
+  @IsUrl()
+  featureTextImageUrl?: string;
+
   @ApiPropertyOptional({ type: [Number], description: 'Array of genre IDs' })
   @IsOptional()
   @IsArray()

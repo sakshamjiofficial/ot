@@ -172,7 +172,7 @@ export class AdminController {
 
     const typePath = type === 'movie' ? 'movie' : 'tv';
     const res = await fetch(
-      `https://api.themoviedb.org/3/${typePath}/${id}?api_key=${tmdbApiKey}&language=en-US`
+      `https://api.themoviedb.org/3/${typePath}/${id}?api_key=${tmdbApiKey}&language=en-US&append_to_response=images&include_image_language=en,null`
     );
     if (!res.ok) {
       throw new BadRequestException('TMDB Details request failed');

@@ -29,13 +29,14 @@ graph TD
 ```
 kaler/
 ├── ott-platform/
-│   ├── backend/         # NestJS REST API Server
-│   ├── cms-frontend/    # React (Vite, TailwindCSS) Admin Dashboard
-│   ├── worker/          # Transcoding & HLS Video Processing Service
+│   ├── backend/           # NestJS REST API Server
+│   ├── cms-frontend/      # React (Vite, TailwindCSS) Admin Dashboard
+│   ├── worker/            # Transcoding & HLS Video Processing Service
 │   ├── docker-compose.yml # PostgreSQL, Redis, MinIO, Meilisearch
-│   └── SETUP.md         # Detailed VPS & Deployment Guidelines
-├── android/             # Native Android Client Application
-└── README.md            # Project Workspace Documentation (This File)
+│   ├── devstart.sh        # ⚡ One-command dev launcher (infra + all services)
+│   └── SETUP.md           # Detailed VPS & Deployment Guidelines
+├── android/               # Native Android Client Application
+└── README.md              # Project Workspace Documentation (This File)
 ```
 
 ---
@@ -62,42 +63,93 @@ The table below contrasts the configuration, commands, and infrastructure compon
 
 ## ⚡ Local Development Setup
 
-### 1. Prerequisites
-- **Node.js** (v18+ recommended)
-- **Docker & Docker Compose** (for database & storage containers)
-- **FFmpeg** (installed on host/worker machine for video probes/transcoding)
+### Prerequisites
+- **Node.js** v18+ — [download](https://nodejs.org)
+- **Docker & Docker Compose** — for containerised infrastructure
+- **FFmpeg** — required by the transcoding worker
 
-### 2. Start Infrastructure Services
-Spin up PostgreSQL, Redis, Meilisearch, and MinIO S3:
+---
+
+### 🟢 Quick Start — One Command
+
+The [`devstart.sh`](./ott-platform/devstart.sh) script starts the **entire development environment** in a single terminal:
+
 ```bash
 cd ott-platform
-docker compose up -d
+./devstart.sh
 ```
-*MinIO bucket initialization will run automatically via `minio-init` to configure the `ott-media` bucket and public access policies.*
 
-### 3. Launch NestJS Backend API
+What it does, in order:
+
+| Step | Action | URL / Port |
+|------|--------|------------|
+| 1 | Starts Docker infrastructure (Postgres, Redis, Meilisearch, MinIO) | see below |
+| 2 | Waits for each service to become ready | — |
+| 3 | Installs `node_modules` if missing (all three packages) | — |
+| 4 | Launches **NestJS API** in watch mode | `http://localhost:3000` |
+| 5 | Launches **Vite CMS Frontend** in watch mode | `http://localhost:5173` |
+| 6 | Launches **FFmpeg Transcoding Worker** in watch mode | background |
+
+**Infrastructure service URLs (when running):**
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| MinIO Console | `http://localhost:9001` | `minio_admin` / `minio_password_123` |
+| MinIO S3 API | `http://localhost:9000` | — |
+| Meilisearch | `http://localhost:7700` | — |
+| PostgreSQL | `localhost:5432` | see `.env` |
+| Redis | `localhost:6379` | see `.env` |
+
+**Available flags:**
+
+```bash
+./devstart.sh --no-infra    # Skip Docker startup (infrastructure already running)
+./devstart.sh --no-worker   # Skip the FFmpeg transcoding worker
+./devstart.sh --help        # Show usage
+```
+
+**Live logs** are streamed to the terminal with color-coded prefixes and also written to:
+```
+ott-platform/.dev-logs/backend.log
+ott-platform/.dev-logs/frontend.log
+ott-platform/.dev-logs/worker.log
+```
+
+Press **Ctrl+C** to gracefully stop all services and Docker containers.
+
+---
+
+### 🔧 Manual Step-by-Step Setup (alternative)
+
+If you prefer to run services individually:
+
+**1. Start infrastructure:**
+```bash
+cd ott-platform
+docker compose up -d postgres redis meilisearch minio minio-init
+```
+*MinIO bucket initialization runs automatically via `minio-init`.*
+
+**2. Launch NestJS Backend API:**
 ```bash
 cd ott-platform/backend
 npm install
-npm run start:dev
+npm run start:dev   # watch mode → :3000
 ```
-*API will compile and run in watch mode on port `3000`.*
 
-### 4. Launch Transcoding Worker
+**3. Launch Transcoding Worker:**
 ```bash
 cd ott-platform/worker
 npm install
-npm run start:dev
+npm run start:dev   # ts-node watch mode
 ```
-*Worker will run on host and process transcoding jobs from the Redis queue.*
 
-### 5. Launch CMS Admin Panel
+**4. Launch CMS Admin Panel:**
 ```bash
 cd ott-platform/cms-frontend
 npm install
-npm run dev
+npm run dev         # Vite dev server → :5173
 ```
-*Frontend admin UI will run in watch mode on port `5174`.*
 
 ---
 

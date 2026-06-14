@@ -116,6 +116,8 @@ export interface Content {
   posterUrl?:       string;
   bannerUrl?:       string;
   thumbnailUrl?:    string;
+  featurePosterUrl?:    string;
+  featureTextImageUrl?: string;
   totalPlays:       number;
   totalWatchSeconds: number;
   scheduledAt?:     string;

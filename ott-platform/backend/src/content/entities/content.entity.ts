@@ -80,6 +80,12 @@ export class ContentEntity {
   @Column({ name: 'thumbnail_url', type: 'text', nullable: true })
   thumbnailUrl: string;
 
+  @Column({ name: 'feature_poster_url', type: 'text', nullable: true })
+  featurePosterUrl: string;
+
+  @Column({ name: 'feature_text_image_url', type: 'text', nullable: true })
+  featureTextImageUrl: string;
+
   @Column({ name: 'total_plays', type: 'bigint', default: 0 })
   totalPlays: number;
 
