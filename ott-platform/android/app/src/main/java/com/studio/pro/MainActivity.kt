@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
                 tokenStorage.saveDeviceId(java.util.UUID.randomUUID().toString())
             }
             startDest = if (tokenStorage.getAccessToken() != null) {
-                com.studio.pro.presentation.navigation.Routes.HOME
+                com.studio.pro.presentation.navigation.Routes.CHOOSE_PROFILE
             } else {
                 com.studio.pro.presentation.navigation.Routes.LOGIN
             }
