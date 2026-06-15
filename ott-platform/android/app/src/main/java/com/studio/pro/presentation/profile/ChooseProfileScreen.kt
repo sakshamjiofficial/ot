@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,7 +34,7 @@ fun ChooseProfileScreen(
 ) {
     val profiles = remember(userName) {
         listOf(
-            UserProfile(userName ?: "Loading...", Color(0xFFE50914)) // Brand Red
+            UserProfile(userName ?: "", Color(0xFFE50914)) // Brand Red
         )
     }
 
@@ -46,6 +47,30 @@ fun ChooseProfileScreen(
             )
         )
     }
+
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1200,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmerTranslate"
+    )
+
+    val shimmerBrush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF202020),
+            Color(0xFF353535),
+            Color(0xFF202020)
+        ),
+        start = Offset(0f, 0f),
+        end = Offset(translateAnim, translateAnim)
+    )
 
     Scaffold(
         containerColor = Color.Transparent
@@ -73,7 +98,6 @@ fun ChooseProfileScreen(
                 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                val profile = profiles.first()
                 var isPressed by remember { mutableStateOf(false) }
                 val scale by animateFloatAsState(
                     targetValue = if (isPressed) 0.92f else 1.0f,
@@ -84,41 +108,67 @@ fun ChooseProfileScreen(
                     label = "scale"
                 )
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .scale(scale)
-                        .clickable(
-                            onClick = {
-                                isPressed = true
-                                onProfileSelected(profile.name)
-                            }
-                        )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(profile.color)
-                            .border(1.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
-                        contentAlignment = Alignment.Center
+                if (userName == null) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.scale(scale)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = profile.name,
-                            tint = Color.White.copy(alpha = 0.85f),
-                            modifier = Modifier.size(64.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(shimmerBrush)
+                                .border(1.5.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .width(90.dp)
+                                .height(20.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(shimmerBrush)
                         )
                     }
+                } else {
+                    val profile = profiles.first()
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .scale(scale)
+                            .clickable(
+                                onClick = {
+                                    isPressed = true
+                                    onProfileSelected(profile.name)
+                                }
+                            )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(profile.color)
+                                .border(1.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = profile.name,
+                                tint = Color.White.copy(alpha = 0.85f),
+                                modifier = Modifier.size(64.dp)
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
-                    Text(
-                        text = profile.name,
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Text(
+                            text = profile.name,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(80.dp))
