@@ -2,6 +2,7 @@ package com.studio.pro.presentation.home
 
 import androidx.compose.animation.*
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -1025,26 +1026,155 @@ private fun WideContentCard(
 
 @Composable
 private fun HomeSkeletonLoader() {
-    val shimmerBrush = Brush.horizontalGradient(
-        colors = listOf(OttColors.Surface, OttColors.SurfaceVariant, OttColors.Surface),
+    val transition = rememberInfiniteTransition(label = "homeShimmer")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1200f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1200,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "homeShimmerTranslate"
     )
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+
+    val shimmerBrush = Brush.linearGradient(
+        colors = listOf(
+            OttColors.Surface,
+            Color(0xFF282828), // Sleek highlight in the middle
+            OttColors.Surface
+        ),
+        start = Offset(0f, 0f),
+        end = Offset(translateAnim, translateAnim)
+    )
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        // 1. App Header/Logo Area placeholder
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Logo placeholder
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(shimmerBrush)
+                )
+                // Search & Profile icons placeholder
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(shimmerBrush)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(shimmerBrush)
+                    )
+                }
+            }
+        }
+
+        // 2. Filter chips row placeholder
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val chipWidths = listOf(75.dp, 85.dp, 70.dp, 95.dp)
+                chipWidths.forEach { width ->
+                    Box(
+                        modifier = Modifier
+                            .width(width)
+                            .height(36.dp)
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(shimmerBrush)
+                    )
+                }
+            }
+        }
+
+        // 3. Featured HeroBanner placeholder (aspectRatio 2f/3f, padded horizontal 24.dp)
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(0.76f)
                     .padding(horizontal = 24.dp, vertical = 12.dp)
+                    .aspectRatio(2f / 3f)
                     .clip(RoundedCornerShape(12.dp))
                     .background(shimmerBrush)
             )
         }
-        items(3) {
+
+        // 4. Continue Watching row placeholder (WIDE card style: width 160.dp, height 90.dp)
+        item {
             Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).width(140.dp).height(18.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush))
-                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(5) {
-                        Box(modifier = Modifier.width(100.dp).height(145.dp).clip(RoundedCornerShape(8.dp)).background(shimmerBrush))
+                // Section Title placeholder
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .width(160.dp)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(shimmerBrush)
+                )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(3) {
+                        Box(
+                            modifier = Modifier
+                                .width(160.dp)
+                                .height(90.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(shimmerBrush)
+                        )
+                    }
+                }
+            }
+        }
+
+        // 5. Standard category rows placeholder (STANDARD card style: width 100.dp, height 145.dp)
+        items(2) {
+            Column(modifier = Modifier.padding(vertical = 12.dp)) {
+                // Section Title placeholder
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .width(140.dp)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(shimmerBrush)
+                )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(4) {
+                        Box(
+                            modifier = Modifier
+                                .width(100.dp)
+                                .height(145.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(shimmerBrush)
+                        )
                     }
                 }
             }
