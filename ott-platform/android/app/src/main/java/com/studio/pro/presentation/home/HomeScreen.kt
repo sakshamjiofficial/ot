@@ -60,7 +60,7 @@ fun HomeScreen(
     var selectedMovieBannerId by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedGenericBannerId by rememberSaveable { mutableStateOf<String?>(null) }
 
-    var dominantColor by remember { mutableStateOf(Color(0xFF1A0808)) }
+    var dominantColor by remember { mutableStateOf(Color(0xFF121212)) }
 
     val darkDominantColor = remember(dominantColor) {
         val hsl = FloatArray(3)
