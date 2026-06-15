@@ -84,9 +84,13 @@ fun AppNavigation(
         }
 
         composable(Routes.CHOOSE_PROFILE) {
+            LaunchedEffect(Unit) {
+                authViewModel.loadCurrentUser()
+            }
             val authState by authViewModel.uiState.collectAsStateWithLifecycle()
             val userName = remember(authState) {
-                (authState as? AuthUiState.Success)?.user?.displayName
+                val user = (authState as? AuthUiState.Success)?.user
+                user?.displayName?.takeIf { it.isNotBlank() } ?: user?.email?.substringBefore("@")
             }
             ChooseProfileScreen(
                 userName = userName,

@@ -33,15 +33,15 @@ fun ChooseProfileScreen(
 ) {
     val profiles = remember(userName) {
         listOf(
-            UserProfile(userName ?: "Main User", Color(0xFFE50914)) // Brand Red
+            UserProfile(userName ?: "Loading...", Color(0xFFE50914)) // Brand Red
         )
     }
 
     val backgroundGradient = remember {
         Brush.verticalGradient(
             colors = listOf(
-                Color(0xFF2E080C), // Deep burgundy red
-                Color(0xFF140203), // Very dark burgundy red
+                Color(0xFF1C1C1E), // Dark charcoal/gray
+                Color(0xFF0C0C0E), // Very dark gray
                 Color(0xFF000000)  // Pure black
             )
         )

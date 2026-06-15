@@ -58,6 +58,15 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun loadCurrentUser() {
+        viewModelScope.launch {
+            val user = authRepository.getCurrentUser()
+            if (user != null) {
+                _uiState.value = AuthUiState.Success(user)
+            }
+        }
+    }
+
     fun resetState() {
         _uiState.value = AuthUiState.Idle
     }
