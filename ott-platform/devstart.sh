@@ -199,6 +199,24 @@ for dir_label in "$BACKEND_DIR:backend" "$FRONTEND_DIR:cms-frontend" "$WORKER_DI
 done
 
 # ════════════════════════════════════════════════════════════════
+section "Running database migrations and seeds"
+
+info "Executing schema migration 001..."
+docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T postgres psql \
+  -U ott_user -d ott_db < "$BACKEND_DIR/src/database/migrations/001_initial_schema.sql"
+
+info "Executing schema migration 002..."
+docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T postgres psql \
+  -U ott_user -d ott_db < "$BACKEND_DIR/src/database/migrations/002_subscription_schema.sql"
+
+info "Executing schema migration 003..."
+docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T postgres psql \
+  -U ott_user -d ott_db < "$BACKEND_DIR/src/database/migrations/003_feature_media_urls.sql"
+
+info "Running seeds..."
+npm --prefix "$BACKEND_DIR" run seed || warn "Seeds failed (possibly already seeded)"
+
+# ════════════════════════════════════════════════════════════════
 section "Starting application services"
 
 # ── 1. NestJS API backend ─────────────────────────────────────

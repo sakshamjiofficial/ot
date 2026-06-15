@@ -92,7 +92,7 @@ export default function UploadPage() {
             <h3 className="mb-3 font-semibold text-white">Content Details</h3>
             <div className="space-y-2 text-sm">
               <InfoRow label="Type"     value={content.type.toUpperCase()} />
-              <InfoRow label="Language" value={content.language?.toUpperCase() || '—'} />
+              <InfoRow label="Language" value={content.language ? content.language.split(',').map((l) => l.toUpperCase().trim()).join(', ') : '—'} />
               <InfoRow label="Year"     value={content.releaseYear?.toString() || '—'} />
               <InfoRow label="Rating"   value={content.ageRating || '—'} />
               {content.durationSeconds && (

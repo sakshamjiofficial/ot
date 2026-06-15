@@ -14,6 +14,7 @@ const ALLOWED_EXTENSIONS = new Set(['mp4','mkv','mov','avi','webm','mpg','mpeg']
 const ALLOWED_MIME_TYPES  = new Set([
   'video/mp4','video/x-matroska','video/quicktime',
   'video/x-msvideo','video/webm','video/mpeg',
+  'application/octet-stream','video/x-m4v',
 ]);
 
 export interface InitiateUploadDto {

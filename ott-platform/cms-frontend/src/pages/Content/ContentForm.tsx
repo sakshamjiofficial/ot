@@ -8,13 +8,14 @@ import { Save, ArrowLeft, Film, Tv, Search, X }             from 'lucide-react';
 import { contentApi, configApi, tmdbApi }          from '@/api/endpoints';
 import { Button, Input, Textarea, Select, Card, Spinner } from '@/components/UI';
 import type { ContentType }    from '@/types';
+import { cn }                  from '@/utils/cn';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
   title:               z.string().min(1, 'Title is required').max(500),
   description:         z.string().optional(),
   shortDescription:    z.string().max(300).optional(),
-  language:            z.string().default('en'),
+  language:            z.array(z.string()).min(1, 'At least one language is required').default(['en']),
   releaseYear:         z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().min(1900).max(2100).optional()),
   durationSeconds:     z.preprocess((val) => val === '' || val === null || val === undefined ? undefined : val, z.coerce.number().optional()),
   ageRating:           z.string().optional(),
@@ -91,7 +92,7 @@ export default function ContentForm({ type }: ContentFormProps) {
       }
       
       if (data.original_language) {
-        setValue('language', data.original_language, { shouldDirty: true });
+        setValue('language', [data.original_language], { shouldDirty: true });
       }
 
       if (data.vote_average) {
@@ -155,7 +156,7 @@ export default function ContentForm({ type }: ContentFormProps) {
     formState: { errors, isDirty },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { status: 'draft', isPremium: false, isFeatured: false, isTrending: false, language: 'en', genreIds: [] },
+    defaultValues: { status: 'draft', isPremium: false, isFeatured: false, isTrending: false, language: ['en'], genreIds: [] },
   });
 
   useEffect(() => {
@@ -163,6 +164,7 @@ export default function ContentForm({ type }: ContentFormProps) {
       reset({
         ...existing,
         genreIds:            existing.genres?.map((g) => g.id) ?? [],
+        language:            existing.language ? existing.language.split(',').map(s => s.trim()).filter(Boolean) : ['en'],
         durationSeconds:     existing.durationSeconds ?? undefined,
         releaseYear:         existing.releaseYear ?? undefined,
         imdbRating:          existing.imdbRating ?? undefined,
@@ -181,6 +183,7 @@ export default function ContentForm({ type }: ContentFormProps) {
       const payload = {
         ...data,
         type,
+        language:            data.language.join(','),
         description:         data.description         || undefined,
         shortDescription:    data.shortDescription    || undefined,
         ageRating:           data.ageRating           || undefined,
@@ -271,30 +274,93 @@ export default function ContentForm({ type }: ContentFormProps) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <Input label="Release Year" type="number" min={1900} max={2100} {...register('releaseYear')} error={errors.releaseYear?.message} />
-                    {isMovie && (
+                    {isMovie ? (
                       <Input label="Duration (seconds)" type="number" {...register('durationSeconds')} hint="e.g. 5400 = 1h 30m" />
+                    ) : (
+                      <Select label="Age Rating" {...register('ageRating')} placeholder="Select rating" options={[
+                        { value: 'U',   label: 'U — Universal' },
+                        { value: 'U/A', label: 'U/A — Parental Guidance' },
+                        { value: 'A',   label: 'A — Adults Only' },
+                        { value: '7+',  label: '7+ years' },
+                        { value: '13+', label: '13+ years' },
+                        { value: '16+', label: '16+ years' },
+                        { value: '18+', label: '18+ years' },
+                      ]} />
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <Select label="Language" {...register('language')} options={[
-                      { value: 'en', label: 'English' },
-                      { value: 'hi', label: 'Hindi' },
-                      { value: 'ta', label: 'Tamil' },
-                      { value: 'te', label: 'Telugu' },
-                      { value: 'ml', label: 'Malayalam' },
-                      { value: 'bn', label: 'Bengali' },
-                      { value: 'mr', label: 'Marathi' },
-                    ]} />
-                    <Select label="Age Rating" {...register('ageRating')} placeholder="Select rating" options={[
-                      { value: 'U',   label: 'U — Universal' },
-                      { value: 'U/A', label: 'U/A — Parental Guidance' },
-                      { value: 'A',   label: 'A — Adults Only' },
-                      { value: '7+',  label: '7+ years' },
-                      { value: '13+', label: '13+ years' },
-                      { value: '16+', label: '16+ years' },
-                      { value: '18+', label: '18+ years' },
-                    ]} />
+                  {isMovie && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Select label="Age Rating" {...register('ageRating')} placeholder="Select rating" options={[
+                        { value: 'U',   label: 'U — Universal' },
+                        { value: 'U/A', label: 'U/A — Parental Guidance' },
+                        { value: 'A',   label: 'A — Adults Only' },
+                        { value: '7+',  label: '7+ years' },
+                        { value: '13+', label: '13+ years' },
+                        { value: '16+', label: '16+ years' },
+                        { value: '18+', label: '18+ years' },
+                      ]} />
+                      <Input label="IMDb Rating" type="number" step="0.1" min={0} max={10} {...register('imdbRating')} placeholder="8.5" />
+                    </div>
+                  )}
+
+                  {!isMovie && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="IMDb Rating" type="number" step="0.1" min={0} max={10} {...register('imdbRating')} placeholder="8.5" />
+                    </div>
+                  )}
+
+                  {/* Languages Selector */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-surface-100">Languages</label>
+                    <Controller
+                      name="language"
+                      control={control}
+                      render={({ field: { value = [], onChange } }) => {
+                        const langOptions = [
+                          { value: 'en', label: 'English' },
+                          { value: 'hi', label: 'Hindi' },
+                          { value: 'ta', label: 'Tamil' },
+                          { value: 'te', label: 'Telugu' },
+                          { value: 'ml', label: 'Malayalam' },
+                          { value: 'bn', label: 'Bengali' },
+                          { value: 'mr', label: 'Marathi' },
+                        ];
+                        const safeValue = Array.isArray(value) ? value : (value ? [value] : []);
+
+                        const handleToggle = (langCode: string) => {
+                          if (safeValue.includes(langCode)) {
+                            onChange(safeValue.filter((v) => v !== langCode));
+                          } else {
+                            onChange([...safeValue, langCode]);
+                          }
+                        };
+
+                        return (
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {langOptions.map((o) => {
+                              const selected = safeValue.includes(o.value);
+                              return (
+                                <button
+                                  key={o.value}
+                                  type="button"
+                                  onClick={() => handleToggle(o.value)}
+                                  className={cn(
+                                    'px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-150',
+                                    selected
+                                      ? 'bg-brand-500/20 border-brand-500 text-brand-400 font-semibold shadow-sm shadow-brand-500/10'
+                                      : 'bg-surface-700 border-surface-600 text-surface-300 hover:border-surface-500 hover:text-surface-100'
+                                  )}
+                                >
+                                  {o.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      }}
+                    />
+                    {errors.language && <p className="text-xs text-red-400">{errors.language.message}</p>}
                   </div>
 
                   <Input label="IMDb Rating" type="number" step="0.1" min={0} max={10} {...register('imdbRating')} placeholder="8.5" />

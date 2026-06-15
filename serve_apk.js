@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Download: https://vigilant-garbanzo-g4v7xrrrw9w6c9x7v-${PORT}.app.github.dev/api/v1/download-apk`);
+  console.log(`Download: https://urban-space-acorn-g4p64wjp55vq3pv64-${PORT}.app.github.dev/api/v1/download-apk`);
 });

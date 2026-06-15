@@ -37,7 +37,7 @@ export class ContentEntity {
   @Column({ name: 'short_description', length: 300, nullable: true })
   shortDescription: string;
 
-  @Column({ length: 10, default: 'en' })
+  @Column({ length: 250, default: 'en' })
   language: string;
 
   @Column({ name: 'release_year', type: 'smallint', nullable: true })

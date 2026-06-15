@@ -166,7 +166,7 @@ export default function ContentList({ type }: ContentListProps) {
           <p className="font-medium text-white line-clamp-1">{row.title}</p>
           <p className="mt-0.5 text-xs text-surface-300">
             {row.releaseYear}
-            {row.language && ` · ${row.language.toUpperCase()}`}
+            {row.language && ` · ${row.language.split(',').map((l) => l.toUpperCase().trim()).join(', ')}`}
             {row.ageRating && ` · ${row.ageRating}`}
           </p>
         </div>

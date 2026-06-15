@@ -36,6 +36,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.drawable.toBitmap
 import coil.request.ImageRequest
+import androidx.compose.ui.res.painterResource
+import com.studio.pro.R
 
 @Composable
 fun HomeScreen(
@@ -861,23 +863,16 @@ private fun ContentCard(
             modifier           = Modifier.fillMaxSize(),
         )
         
-        // Red "K" logo in top-left
+        // App logo in top-left
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(6.dp)
         ) {
-            Text(
-                text = "K",
-                color = OttColors.Brand,
-                fontWeight = FontWeight.Black,
-                fontSize = 14.sp,
-                style = LocalTextStyle.current.copy(
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.5f),
-                        blurRadius = 4f
-                    )
-                )
+            Image(
+                painter = painterResource(id = R.drawable.ic_app_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier.size(16.dp)
             )
         }
 
@@ -952,23 +947,16 @@ private fun RankedContentCard(
                 modifier           = Modifier.fillMaxSize(),
             )
             
-            // Red "K" logo in top-left
+            // App logo in top-left
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(6.dp)
             ) {
-                Text(
-                    text = "K",
-                    color = OttColors.Brand,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 14.sp,
-                    style = LocalTextStyle.current.copy(
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = 0.5f),
-                            blurRadius = 4f
-                        )
-                    )
+                Image(
+                    painter = painterResource(id = R.drawable.ic_app_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.size(16.dp)
                 )
             }
 

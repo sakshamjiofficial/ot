@@ -30,6 +30,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.studio.pro.domain.model.*
 import com.studio.pro.presentation.common.OttColors
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.studio.pro.R
 
 @Composable
 fun CategoryScreen(
@@ -588,23 +591,16 @@ private fun ContentCard(
             modifier           = Modifier.fillMaxSize(),
         )
         
-        // Red "K" logo in top-left
+        // App logo in top-left
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(6.dp)
         ) {
-            Text(
-                text = "K",
-                color = OttColors.Brand,
-                fontWeight = FontWeight.Black,
-                fontSize = 14.sp,
-                style = LocalTextStyle.current.copy(
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.5f),
-                        blurRadius = 4f
-                    )
-                )
+            Image(
+                painter = painterResource(id = R.drawable.ic_app_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier.size(16.dp)
             )
         }
 
@@ -679,17 +675,10 @@ private fun RankedContentCard(
                     .align(Alignment.TopStart)
                     .padding(6.dp)
             ) {
-                Text(
-                    text = "K",
-                    color = OttColors.Brand,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 14.sp,
-                    style = LocalTextStyle.current.copy(
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = 0.5f),
-                            blurRadius = 4f
-                        )
-                    )
+                Image(
+                    painter = painterResource(id = R.drawable.ic_app_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.size(16.dp)
                 )
             }
 

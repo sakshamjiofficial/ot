@@ -15,6 +15,8 @@ import com.studio.pro.presentation.home.CategoryScreen
 import com.studio.pro.presentation.player.PlayerScreen
 import com.studio.pro.presentation.search.SearchScreen
 import com.studio.pro.presentation.profile.ProfileScreen
+import com.studio.pro.presentation.profile.ChooseProfileScreen
+import com.studio.pro.presentation.auth.AuthUiState
 import com.studio.pro.presentation.content.ContentDetailScreen
 import com.studio.pro.presentation.splash.SplashScreen
 
@@ -30,6 +32,7 @@ object Routes {
     const val PLAYER_EPISODE = "player/episode/{episodeId}"
     const val SERIES         = "series"
     const val MOVIES         = "movies"
+    const val CHOOSE_PROFILE = "choose_profile"
 
     fun contentDetail(id: String) = "content/$id"
     fun playerContent(id: String) = "player/content/$id"
@@ -61,7 +64,7 @@ fun AppNavigation(
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess   = {
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.CHOOSE_PROFILE) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
@@ -72,11 +75,26 @@ fun AppNavigation(
         composable(Routes.REGISTER) {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.CHOOSE_PROFILE) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
                 onLoginClick = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.CHOOSE_PROFILE) {
+            val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+            val userName = remember(authState) {
+                (authState as? AuthUiState.Success)?.user?.displayName
+            }
+            ChooseProfileScreen(
+                userName = userName,
+                onProfileSelected = { profileName ->
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.CHOOSE_PROFILE) { inclusive = true }
+                    }
+                }
             )
         }
 
