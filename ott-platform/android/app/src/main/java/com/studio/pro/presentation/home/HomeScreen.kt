@@ -339,9 +339,7 @@ private fun HomeTopBar(
         Image(
             painter = painterResource(id = R.drawable.ic_splash_logo),
             contentDescription = "App Logo",
-            modifier = Modifier
-                .height(54.dp)
-                .width(180.dp),
+            modifier = Modifier.height(48.dp),
             contentScale = ContentScale.Fit
         )
 
