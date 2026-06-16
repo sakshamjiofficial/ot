@@ -84,6 +84,8 @@ export const usersApi = {
   update:         (id: string, data: any) => apiPut<AdminUser>(`/users/${id}`, data),
   changePassword: (id: string, password: string) => apiPut<void>(`/users/${id}/password`, { password }),
   deactivate:     (id: string) => apiDelete(`/users/${id}`),
+  activateSubscription: (userId: string, planId: number) => apiPost<any>(`/admin/users/${userId}/subscription`, { planId }),
+  deactivateSubscription: (userId: string) => apiDelete(`/admin/users/${userId}/subscription`),
 };
 
 

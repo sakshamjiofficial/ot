@@ -33,6 +33,7 @@ object Routes {
     const val SERIES         = "series"
     const val MOVIES         = "movies"
     const val CHOOSE_PROFILE = "choose_profile"
+    const val SUBSCRIPTION   = "subscription"
 
     fun contentDetail(id: String) = "content/$id"
     fun playerContent(id: String) = "player/content/$id"
@@ -88,16 +89,25 @@ fun AppNavigation(
                 authViewModel.loadCurrentUser()
             }
             val authState by authViewModel.uiState.collectAsStateWithLifecycle()
-            val userName = remember(authState) {
-                val user = (authState as? AuthUiState.Success)?.user
+            val user = remember(authState) {
+                (authState as? AuthUiState.Success)?.user
+            }
+            val userName = remember(user) {
                 user?.displayName?.takeIf { it.isNotBlank() } ?: user?.email?.substringBefore("@")
+            }
+            val avatarUrl = remember(user) {
+                user?.avatarUrl
             }
             ChooseProfileScreen(
                 userName = userName,
+                avatarUrl = avatarUrl,
                 onProfileSelected = { profileName ->
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.CHOOSE_PROFILE) { inclusive = true }
                     }
+                },
+                onManageProfiles = {
+                    navController.navigate("profile?edit=true")
                 }
             )
         }
@@ -136,8 +146,16 @@ fun AppNavigation(
             )
         }
 
-        composable(Routes.PROFILE) {
+        composable(
+            route = "profile?edit={edit}",
+            arguments = listOf(navArgument("edit") {
+                type = NavType.BoolType
+                defaultValue = false
+            })
+        ) { back ->
+            val startInEditMode = back.arguments?.getBoolean("edit") ?: false
             ProfileScreen(
+                startInEditMode = startInEditMode,
                 onBack   = { navController.popBackStack() },
                 onLogout = {
                     authViewModel.logout()
@@ -145,6 +163,21 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                onNavigateToSubscription = { navController.navigate(Routes.SUBSCRIPTION) }
+            )
+        }
+
+        composable(Routes.SUBSCRIPTION) {
+            val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+            val user = (authState as? AuthUiState.Success)?.user
+            com.studio.pro.presentation.subscription.SubscriptionScreen(
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    authViewModel.loadCurrentUser()
+                    navController.popBackStack()
+                },
+                userEmail = user?.email ?: "",
+                userName = user?.displayName ?: "User"
             )
         }
 

@@ -57,6 +57,11 @@ export class AdminCreateUserDto {
   @MaxLength(20)
   phone?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  avatarUrl?: string;
+
   @ApiProperty({ enum: UserRole, default: UserRole.USER })
   @IsEnum(UserRole)
   role: UserRole;
@@ -74,6 +79,11 @@ export class AdminUpdateUserDto {
   @IsString()
   @MaxLength(20)
   phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  avatarUrl?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

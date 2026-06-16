@@ -376,7 +376,7 @@ CREATE TRIGGER trg_transcode_updated_at
 
 CREATE TABLE IF NOT EXISTS subscription_plans (
     id              SERIAL PRIMARY KEY,
-    name            VARCHAR(100) NOT NULL,
+    name            VARCHAR(100) UNIQUE NOT NULL,
     plan_type       subscription_plan NOT NULL,
     price_inr       NUMERIC(10,2) NOT NULL,
     duration_days   INT NOT NULL,
@@ -514,7 +514,7 @@ CREATE TABLE IF NOT EXISTS banners (
 
 CREATE TABLE IF NOT EXISTS home_sections (
     id           SERIAL PRIMARY KEY,
-    title        VARCHAR(200) NOT NULL,
+    title        VARCHAR(200) UNIQUE NOT NULL,
     section_type VARCHAR(50) NOT NULL,
     query_config JSONB,
     sort_order   INT DEFAULT 0,
@@ -580,6 +580,24 @@ ON CONFLICT (key) DO NOTHING;
 -- SEED DATA — Subscription Plans
 -- =============================================================
 
+-- Clean up duplicates for subscription_plans
+DELETE FROM subscription_plans
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM subscription_plans
+    GROUP BY name
+);
+
+-- Add UNIQUE constraint to subscription_plans (name) if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'subscription_plans_name_key'
+    ) THEN
+        ALTER TABLE subscription_plans ADD CONSTRAINT subscription_plans_name_key UNIQUE (name);
+    END IF;
+END $$;
+
 INSERT INTO subscription_plans
     (name, plan_type, price_inr, duration_days, max_devices, max_quality, features)
 VALUES
@@ -587,7 +605,7 @@ VALUES
     ('Basic',   'basic',   99,     30,  2, '720p',  '{"ads": false, "downloads": true, "max_download_quality": "480p"}'),
     ('Premium', 'premium', 199,    30,  4, '1080p', '{"ads": false, "downloads": true, "max_download_quality": "1080p", "multi_audio": true}'),
     ('Family',  'family',  299,    30,  6, '1080p', '{"ads": false, "downloads": true, "max_download_quality": "1080p", "multi_audio": true, "profiles": 6}')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
 -- =============================================================
 -- SEED DATA — Genres
@@ -615,6 +633,24 @@ ON CONFLICT (slug) DO NOTHING;
 -- SEED DATA — Home Sections
 -- =============================================================
 
+-- Clean up duplicates for home_sections
+DELETE FROM home_sections
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM home_sections
+    GROUP BY title
+);
+
+-- Add UNIQUE constraint to home_sections (title) if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'home_sections_title_key'
+    ) THEN
+        ALTER TABLE home_sections ADD CONSTRAINT home_sections_title_key UNIQUE (title);
+    END IF;
+END $$;
+
 INSERT INTO home_sections (title, section_type, sort_order, query_config) VALUES
     ('Featured',          'featured',         1, '{"limit": 5}'),
     ('Trending Now',      'trending',         2, '{"limit": 20}'),
@@ -624,7 +660,7 @@ INSERT INTO home_sections (title, section_type, sort_order, query_config) VALUES
     ('Web Series',        'series',           6, '{"limit": 20}'),
     ('Hindi Dubbed',      'language',         7, '{"language": "hi", "limit": 20}'),
     ('Top Rated',         'top_rated',        8, '{"min_rating": 7.5, "limit": 20}')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (title) DO NOTHING;
 
 -- Done
 SELECT 'Schema migration 001 completed successfully' AS result;

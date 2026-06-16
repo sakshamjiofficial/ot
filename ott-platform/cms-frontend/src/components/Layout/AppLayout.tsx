@@ -15,7 +15,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/encoding':    'Encoding Queue',
   '/users':       'User Management',
   '/analytics':   'Analytics',
-  '/banners':     'Banner Management',
+  '/banners':     'Default Avatars',
   '/genres':      'Genre Management',
   '/notifications': 'Notifications',
   '/settings':    'Settings',

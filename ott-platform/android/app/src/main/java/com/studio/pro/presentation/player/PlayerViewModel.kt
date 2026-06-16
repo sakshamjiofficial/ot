@@ -178,7 +178,7 @@ class PlayerViewModel @Inject constructor(
         val contentId = currentContentId
         val episodeId = currentEpisodeId
 
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             if (posMs > 3000 && contentId != null) {
                 watchRepository.updateProgress(
                     contentId      = contentId,

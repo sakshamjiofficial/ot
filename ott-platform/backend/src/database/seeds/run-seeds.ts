@@ -15,11 +15,11 @@ async function runSeeds(ds: DataSource) {
     const passwordHash = await bcrypt.hash('Admin@1234', 12);
 
     await queryRunner.query(`
-      INSERT INTO users (email, password_hash, display_name, role, is_active, is_email_verified)
-      VALUES ($1, $2, $3, 'superadmin', true, true)
+      INSERT INTO users (email, password_hash, display_name, role, is_active, is_email_verified, avatar_url)
+      VALUES ($1, $2, $3, 'superadmin', true, true, $4)
       ON CONFLICT (email) DO UPDATE
-        SET role = 'superadmin', is_active = true
-    `, ['admin@ssooss.store', passwordHash, 'Super Admin']);
+        SET role = 'superadmin', is_active = true, avatar_url = EXCLUDED.avatar_url
+    `, ['admin@ssooss.store', passwordHash, 'Super Admin', 'https://api.dicebear.com/7.x/avataaars/png?seed=SuperAdmin']);
 
     console.log('✅ Superadmin created: admin@ssooss.store / Admin@1234');
 

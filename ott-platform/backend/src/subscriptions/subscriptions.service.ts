@@ -448,4 +448,39 @@ export class SubscriptionsService {
       totalRevenueInr:     parseFloat(totalRevenue?.total || '0'),
     };
   }
+
+  // ─── Admin: Manual Subscription Control ──────────────────
+
+  async adminActivateSubscription(userId: string, planId: number): Promise<SubscriptionEntity> {
+    const plan = await this.getPlanById(planId);
+
+    // Deactivate current active subscriptions
+    const active = await this.getActiveSubscription(userId);
+    if (active) {
+      active.status = SubscriptionStatus.EXPIRED;
+      await this.subRepo.save(active);
+    }
+
+    const now = new Date();
+    const expires = new Date(now.getTime() + plan.durationDays * 86400_000);
+
+    const sub = this.subRepo.create({
+      userId,
+      planId,
+      status: SubscriptionStatus.ACTIVE,
+      startsAt: now,
+      expiresAt: expires,
+      autoRenew: false,
+    });
+
+    return this.subRepo.save(sub);
+  }
+
+  async adminDeactivateSubscription(userId: string): Promise<void> {
+    const active = await this.getActiveSubscription(userId);
+    if (active) {
+      active.status = SubscriptionStatus.EXPIRED;
+      await this.subRepo.save(active);
+    }
+  }
 }

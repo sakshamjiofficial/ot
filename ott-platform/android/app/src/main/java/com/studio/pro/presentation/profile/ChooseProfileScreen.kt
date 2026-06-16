@@ -16,9 +16,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 
 data class UserProfile(
     val name: String,
@@ -30,11 +32,13 @@ data class UserProfile(
 @Composable
 fun ChooseProfileScreen(
     userName: String?,
-    onProfileSelected: (String) -> Unit
+    avatarUrl: String?,
+    onProfileSelected: (String) -> Unit,
+    onManageProfiles: () -> Unit
 ) {
-    val profiles = remember(userName) {
+    val profiles = remember(userName, avatarUrl) {
         listOf(
-            UserProfile(userName ?: "", Color(0xFFE50914)) // Brand Red
+            UserProfile(userName ?: "", Color(0xFFE50914), avatarUrl) // Brand Red
         )
     }
 
@@ -152,12 +156,21 @@ fun ChooseProfileScreen(
                                 .border(1.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = profile.name,
-                                tint = Color.White.copy(alpha = 0.85f),
-                                modifier = Modifier.size(64.dp)
-                            )
+                            if (!profile.avatarUrl.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = profile.avatarUrl,
+                                    contentDescription = profile.name,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = profile.name,
+                                    tint = Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(64.dp)
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(14.dp))
@@ -174,7 +187,7 @@ fun ChooseProfileScreen(
                 Spacer(modifier = Modifier.height(80.dp))
 
                 OutlinedButton(
-                    onClick = { /* Manage profiles feature placeholder */ },
+                    onClick = onManageProfiles,
                     border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.LightGray),
                     shape = RoundedCornerShape(4.dp)

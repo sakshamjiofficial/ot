@@ -128,6 +128,9 @@ interface OttApiService {
     @PUT("users/me")
     suspend fun updateProfile(@Body body: Map<String, String>): Response<ApiResponse<UserDto>>
 
+    @GET("banners")
+    suspend fun getBanners(): Response<ApiResponse<List<BannerDto>>>
+
     @GET("users/me/devices")
     suspend fun getDevices(): Response<ApiResponse<List<Map<String, Any>>>>
 

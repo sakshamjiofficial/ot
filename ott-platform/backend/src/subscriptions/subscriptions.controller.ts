@@ -232,4 +232,26 @@ export class SubscriptionsController {
   deletePlan(@Param('id') id: string) {
     return this.subsService.deletePlan(parseInt(id));
   }
+
+  // ─── Admin: Manual user subscription activation ──────────
+
+  @Post('admin/users/:userId/subscription')
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  @ApiOperation({ summary: '[Admin] Manually activate subscription for a user' })
+  adminActivate(
+    @Param('userId') userId: string,
+    @Body('planId') planId: number,
+  ) {
+    return this.subsService.adminActivateSubscription(userId, planId);
+  }
+
+  @Delete('admin/users/:userId/subscription')
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: '[Admin] Manually deactivate/cancel subscription for a user' })
+  adminDeactivate(
+    @Param('userId') userId: string,
+  ) {
+    return this.subsService.adminDeactivateSubscription(userId);
+  }
 }

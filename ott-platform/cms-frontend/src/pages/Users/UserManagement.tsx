@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, UserX, Shield, Users, UserCheck, Plus, Key, Pencil } from 'lucide-react';
-import { usersApi }        from '@/api/endpoints';
+import { Search, UserX, Shield, Users, UserCheck, Plus, Key, Pencil, CreditCard, Sparkles } from 'lucide-react';
+import { usersApi, plansApi }        from '@/api/endpoints';
 import { DataTable }       from '@/components/DataTable/DataTable';
 import { Input, Badge, ConfirmDialog, Card, StatCard, StatusBadge, Button, Select } from '@/components/UI';
 import { formatDate, timeAgo } from '@/utils/cn';
@@ -16,6 +16,8 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordUser, setPasswordUser] = useState<AdminUser | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [subscriptionUser, setSubscriptionUser] = useState<AdminUser | null>(null);
   const queryClient           = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -52,9 +54,17 @@ export default function UserManagement() {
       header: 'User',
       render: (row: AdminUser) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500/20 text-sm font-bold text-brand-400 uppercase">
-            {row.displayName?.[0] || row.email[0]}
-          </div>
+          {row.avatarUrl ? (
+            <img
+              src={row.avatarUrl}
+              alt={row.displayName || row.email}
+              className="h-8 w-8 shrink-0 rounded-full object-cover border border-surface-600"
+            />
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500/20 text-sm font-bold text-brand-400 uppercase">
+              {row.displayName?.[0] || row.email[0]}
+            </div>
+          )}
           <div>
             <p className="font-medium text-white">{row.displayName || '—'}</p>
             <p className="text-xs text-surface-300">{row.email}</p>
@@ -87,6 +97,26 @@ export default function UserManagement() {
           {row.isEmailVerified
             ? <Badge variant="success">✓ Verified</Badge>
             : <Badge variant="warning">Unverified</Badge>}
+        </div>
+      ),
+    },
+    {
+      key:    'subscription',
+      header: 'Subscription',
+      render: (row: AdminUser) => (
+        <div className="flex flex-col gap-1">
+          {row.hasActiveSubscription ? (
+            <>
+              <Badge variant="success">Active</Badge>
+              {row.subscriptionExpiry && (
+                <span className="text-[10px] text-green-400">
+                  Expires {formatDate(row.subscriptionExpiry)}
+                </span>
+              )}
+            </>
+          ) : (
+            <Badge variant="default">Free</Badge>
+          )}
         </div>
       ),
     },
@@ -160,6 +190,14 @@ export default function UserManagement() {
                 <Key size={12} />
                 Password
               </button>
+              <button
+                onClick={() => { setSubscriptionUser(row); setShowSubscriptionModal(true); }}
+                className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-surface-300 hover:bg-surface-600 hover:text-white transition-colors"
+                title="Manage Subscription"
+              >
+                <CreditCard size={12} />
+                Subscription
+              </button>
               {row.isActive ? (
                 <button
                   onClick={() => setDeactivateId(row.id)}
@@ -223,6 +261,21 @@ export default function UserManagement() {
           }}
         />
       )}
+
+      {showSubscriptionModal && subscriptionUser && (
+        <UserSubscriptionModal
+          user={subscriptionUser}
+          onClose={() => {
+            setSubscriptionUser(null);
+            setShowSubscriptionModal(false);
+          }}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            setSubscriptionUser(null);
+            setShowSubscriptionModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -241,6 +294,7 @@ function UserModal({ user, onClose, onSaved }: UserModalProps) {
     email:       user?.email ?? '',
     displayName: user?.displayName ?? '',
     phone:       user?.phone ?? '',
+    avatarUrl:   user?.avatarUrl ?? '',
     password:    '',
     role:        user?.role ?? 'user',
     isActive:    user?.isActive ?? true,
@@ -255,6 +309,7 @@ function UserModal({ user, onClose, onSaved }: UserModalProps) {
         await usersApi.update(user.id, {
           displayName: form.displayName || undefined,
           phone:       form.phone || undefined,
+          avatarUrl:   form.avatarUrl || null,
           role:        form.role,
           isActive:    form.isActive,
         });
@@ -265,6 +320,7 @@ function UserModal({ user, onClose, onSaved }: UserModalProps) {
           password:    form.password,
           displayName: form.displayName || undefined,
           phone:       form.phone || undefined,
+          avatarUrl:   form.avatarUrl || undefined,
           role:        form.role,
         });
         toast.success(`User ${form.email} created`);
@@ -328,6 +384,13 @@ function UserModal({ user, onClose, onSaved }: UserModalProps) {
               ]}
             />
           </div>
+          <Input
+            label="Avatar Image URL"
+            type="url"
+            placeholder="e.g. https://api.dicebear.com/7.x/avataaars/png?seed=User"
+            value={form.avatarUrl}
+            onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
+          />
           {isEdit && (
             <div className="flex items-center gap-2">
               <input
@@ -425,6 +488,137 @@ function UserPasswordModal({ user, onClose }: UserPasswordModalProps) {
             </div>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── User Subscription Modal ──────────────────────────────────
+
+interface UserSubscriptionModalProps {
+  user: AdminUser;
+  onClose: () => void;
+  onSaved: () => void;
+}
+
+function UserSubscriptionModal({ user, onClose, onSaved }: UserSubscriptionModalProps) {
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
+  const { data: plansData, isLoading: plansLoading } = useQuery({
+    queryKey: ['admin-plans'],
+    queryFn:  () => plansApi.listAll(),
+  });
+
+  const plans = plansData ?? [];
+  const activePlans = plans.filter((p: any) => p.isActive);
+
+  // Initialize selectedPlanId to first active plan when loaded
+  React.useEffect(() => {
+    if (activePlans.length > 0 && !selectedPlanId) {
+      setSelectedPlanId(activePlans[0].id.toString());
+    }
+  }, [activePlans, selectedPlanId]);
+
+  const handleActivate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPlanId) {
+      toast.error('Please select a plan');
+      return;
+    }
+    setLoading(true);
+    try {
+      await usersApi.activateSubscription(user.id, parseInt(selectedPlanId));
+      toast.success(`Subscription activated for ${user.displayName || user.email}`);
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to activate subscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (!window.confirm('Are you sure you want to cancel/revoke this subscription?')) return;
+    setLoading(true);
+    try {
+      await usersApi.deactivateSubscription(user.id);
+      toast.success(`Subscription cancelled for ${user.displayName || user.email}`);
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to cancel subscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-xl border border-surface-600 bg-surface-800 p-6 shadow-2xl animate-slide-up">
+        <h3 className="mb-2 font-semibold text-white text-lg">Manage Subscription</h3>
+        <p className="mb-5 text-xs text-surface-400">For user: <strong className="text-white">{user.email}</strong></p>
+
+        {user.hasActiveSubscription ? (
+          <div className="space-y-4">
+            <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4">
+              <div className="flex items-center gap-2 text-green-400 font-medium mb-1">
+                <Sparkles size={16} />
+                <span>Active Premium Subscription</span>
+              </div>
+              {user.subscriptionExpiry && (
+                <p className="text-xs text-surface-300">
+                  Expires on {formatDate(user.subscriptionExpiry)}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button
+                type="button"
+                variant="danger"
+                loading={loading}
+                onClick={handleDeactivate}
+              >
+                Cancel Subscription
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleActivate} className="space-y-4">
+            <div className="rounded-lg bg-surface-700/30 border border-surface-600/50 p-4 text-xs text-surface-300">
+              User currently has no active subscription (Free Plan). Select a plan to manually activate.
+            </div>
+
+            {plansLoading ? (
+              <p className="text-xs text-surface-400">Loading subscription plans...</p>
+            ) : activePlans.length === 0 ? (
+              <p className="text-xs text-red-400">No active subscription plans found. Create a plan under Subscriptions menu first.</p>
+            ) : (
+              <Select
+                label="Choose Plan"
+                value={selectedPlanId}
+                onChange={(e) => setSelectedPlanId(e.target.value)}
+                options={activePlans.map((p: any) => ({
+                  value: p.id.toString(),
+                  label: `${p.name} (${p.planType}) - ₹${p.priceInr} for ${p.durationDays} days`,
+                }))}
+              />
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button
+                type="submit"
+                loading={loading || plansLoading}
+                disabled={activePlans.length === 0}
+              >
+                Activate Subscription
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

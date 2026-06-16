@@ -21,6 +21,8 @@ interface AuthRepository {
     fun isLoggedIn(): Flow<Boolean>
     suspend fun getCurrentUser(): User?
     suspend fun updateFcmToken(token: String): Resource<Unit>
+    suspend fun updateProfile(displayName: String?, avatarUrl: String?): Resource<User>
+    suspend fun getDefaultAvatars(): Resource<List<String>>
 }
 
 interface ContentRepository {

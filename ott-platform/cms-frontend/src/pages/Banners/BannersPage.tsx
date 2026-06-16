@@ -100,8 +100,8 @@ export default function BannersPage() {
     const payload = {
       title: title.trim() || null,
       imageUrl: imageUrl.trim(),
-      linkType: linkType || null,
-      linkValue: linkValue.trim() || null,
+      linkType: 'none',
+      linkValue: null,
       sortOrder: Number(sortOrder),
       isActive,
     };
@@ -130,8 +130,8 @@ export default function BannersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Banner Management</h1>
-          <p className="text-sm text-surface-300">Create and organize hero banners that will display on the home screen.</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Default Avatars</h1>
+          <p className="text-sm text-surface-300">Upload and organize default profile images/avatars available for users.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -153,50 +153,25 @@ export default function BannersPage() {
             <div className="mb-4 flex items-center gap-2">
               <ImageIcon className="text-brand-500" size={20} />
               <h3 className="font-semibold text-white">
-                {isEditing ? 'Edit Banner' : 'Create Banner'}
+                {isEditing ? 'Edit Avatar' : 'Add Avatar'}
               </h3>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                label="Banner Title (Optional)"
-                placeholder="e.g. Inception Movie Release"
+                label="Avatar Name (Optional)"
+                placeholder="e.g. Adventure, Robo, etc."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
 
               <Input
-                label="Image URL"
-                placeholder="https://example.com/banner.jpg"
+                label="Avatar Image URL"
+                placeholder="https://example.com/avatar.jpg"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 required
               />
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-surface-400">Link Type</label>
-                <select
-                  value={linkType}
-                  onChange={(e) => setLinkType(e.target.value)}
-                  className="w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                >
-                  <option value="movie">Movie Detail</option>
-                  <option value="series">Series Detail</option>
-                  <option value="genre">Genre List</option>
-                  <option value="url">External URL</option>
-                  <option value="none">No Link</option>
-                </select>
-              </div>
-
-              {linkType !== 'none' && (
-                <Input
-                  label={linkType === 'url' ? 'External URL' : 'Resource ID (UUID) or Genre ID'}
-                  placeholder={linkType === 'url' ? 'https://...' : 'e.g. UUID of the movie/series'}
-                  value={linkValue}
-                  onChange={(e) => setLinkValue(e.target.value)}
-                  required
-                />
-              )}
 
               <Input
                 label="Sort Order"
@@ -221,7 +196,7 @@ export default function BannersPage() {
 
               <div className="flex gap-2 pt-4">
                 <Button type="submit" variant="primary" className="flex-1" loading={createMutation.isPending || updateMutation.isPending}>
-                  {isEditing ? 'Save Changes' : 'Create Banner'}
+                  {isEditing ? 'Save Changes' : 'Add Avatar'}
                 </Button>
                 {isEditing && (
                   <Button type="button" variant="outline" onClick={resetForm}>
@@ -253,8 +228,8 @@ export default function BannersPage() {
             ) : filteredBanners.length === 0 ? (
               <div className="p-8">
                 <EmptyState
-                  title="No banners found"
-                  description={searchQuery ? 'Try matching another search query' : 'Create a banner on the left to get started.'}
+                  title="No avatars found"
+                  description={searchQuery ? 'Try matching another search query' : 'Add an avatar on the left to get started.'}
                   icon={<ImageIcon size={32} />}
                 />
               </div>
@@ -264,7 +239,7 @@ export default function BannersPage() {
                   <thead className="bg-surface-700/50 text-xs font-semibold uppercase tracking-wider text-surface-300">
                     <tr>
                       <th className="px-6 py-3">Image</th>
-                      <th className="px-6 py-3">Title & Link</th>
+                      <th className="px-6 py-3">Avatar Name</th>
                       <th className="px-6 py-3">Order</th>
                       <th className="px-6 py-3">Status</th>
                       <th className="px-6 py-3 text-right">Actions</th>
@@ -285,15 +260,7 @@ export default function BannersPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="font-medium text-white">{banner.title || 'Untitled Banner'}</div>
-                          {banner.linkType && banner.linkType !== 'none' && (
-                            <div className="mt-1 flex items-center gap-1 text-xs text-brand-400">
-                              <Link2 size={12} />
-                              <span>
-                                {banner.linkType.toUpperCase()}: {banner.linkValue}
-                              </span>
-                            </div>
-                          )}
+                          <div className="font-medium text-white">{banner.title || 'Untitled Avatar'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
                           {banner.sortOrder}
@@ -338,9 +305,9 @@ export default function BannersPage() {
       {/* Delete Confirm */}
       <ConfirmDialog
         open={!!deleteBannerId}
-        title="Delete Banner"
-        description="Are you sure you want to permanently delete this banner? It will be removed from the home screen carousel."
-        confirmLabel="Delete Banner"
+        title="Delete Avatar"
+        description="Are you sure you want to permanently delete this default avatar? It will no longer be available for users to select."
+        confirmLabel="Delete Avatar"
         danger
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteBannerId(null)}

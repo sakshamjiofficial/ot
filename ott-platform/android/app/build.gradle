@@ -25,8 +25,8 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "API_BASE_URL", "\"https://urban-space-acorn-g4p64wjp55vq3pv64-3000.app.github.dev/api/v1\""
-            buildConfigField "String", "CDN_BASE_URL", "\"https://urban-space-acorn-g4p64wjp55vq3pv64-9000.app.github.dev/ott-media\""
+            buildConfigField "String", "API_BASE_URL", "\"https://organic-robot-pj69jq46gjg7h6xjp-3000.app.github.dev/api/v1\""
+            buildConfigField "String", "CDN_BASE_URL", "\"https://organic-robot-pj69jq46gjg7h6xjp-9000.app.github.dev/ott-media\""
             minifyEnabled false
             debuggable    true
         }

@@ -27,6 +27,7 @@ class TokenStorage @Inject constructor(
         private val KEY_USER_EMAIL    = stringPreferencesKey("user_email")
         private val KEY_USER_ROLE     = stringPreferencesKey("user_role")
         private val KEY_DISPLAY_NAME  = stringPreferencesKey("display_name")
+        private val KEY_AVATAR_URL    = stringPreferencesKey("avatar_url")
         private val KEY_DEVICE_ID     = stringPreferencesKey("device_id")
     }
 
@@ -48,12 +49,18 @@ class TokenStorage @Inject constructor(
         email:       String,
         role:        String,
         displayName: String?,
+        avatarUrl:   String? = null,
     ) {
         context.tokenDataStore.edit { prefs ->
             prefs[KEY_USER_ID]      = userId
             prefs[KEY_USER_EMAIL]   = email
             prefs[KEY_USER_ROLE]    = role
             displayName?.let { prefs[KEY_DISPLAY_NAME] = it }
+            if (avatarUrl != null) {
+                prefs[KEY_AVATAR_URL] = avatarUrl
+            } else {
+                prefs.remove(KEY_AVATAR_URL)
+            }
         }
     }
 
@@ -72,6 +79,9 @@ class TokenStorage @Inject constructor(
     suspend fun getDisplayName(): String? =
         context.tokenDataStore.data.first()[KEY_DISPLAY_NAME]
 
+    suspend fun getAvatarUrl(): String? =
+        context.tokenDataStore.data.first()[KEY_AVATAR_URL]
+
     suspend fun saveDeviceId(deviceId: String) {
         context.tokenDataStore.edit { it[KEY_DEVICE_ID] = deviceId }
     }
@@ -87,6 +97,7 @@ class TokenStorage @Inject constructor(
             prefs.remove(KEY_USER_EMAIL)
             prefs.remove(KEY_USER_ROLE)
             prefs.remove(KEY_DISPLAY_NAME)
+            prefs.remove(KEY_AVATAR_URL)
         }
     }
 

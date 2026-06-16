@@ -108,12 +108,11 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
                 .background(horizontalBackgroundGradient)
                 .background(verticalBlackScrim)
         ) {
             if (uiState.isLoading && uiState.featured.isEmpty()) {
-                HomeSkeletonLoader()
+                HomeSkeletonLoader(bottomPadding = paddingValues.calculateBottomPadding())
             } else {
                 val listState = rememberLazyListState()
                 val isScrolled by remember {
@@ -129,7 +128,7 @@ fun HomeScreen(
                 LazyColumn(
                     state               = listState,
                     modifier            = Modifier.fillMaxSize(),
-                    contentPadding      = PaddingValues(bottom = 16.dp),
+                    contentPadding      = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 16.dp),
                     verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     // ── Sticky Top Navigation Header ──────────────
@@ -228,7 +227,12 @@ fun HomeScreen(
                                 else -> true
                             }
                             val matchesGenre = selectedGenre == null || item.genres.any { it.id == selectedGenre!!.id }
-                            matchesType && matchesGenre
+                            val isDuplicateFeatured = section.sectionType != "featured" && (
+                                item.id == selectedSeriesBannerId ||
+                                item.id == selectedMovieBannerId ||
+                                item.id == selectedGenericBannerId
+                            )
+                            matchesType && matchesGenre && !isDuplicateFeatured
                         }
 
                         if (filteredItems.isNotEmpty()) {
@@ -439,9 +443,20 @@ private fun HomeBottomNavigationBar(
     onTabSelected: (Int) -> Unit
 ) {
     NavigationBar(
-        containerColor = Color(0xFF0F0F0F),
-        tonalElevation = 0.dp,
-        modifier = Modifier.height(64.dp)
+        containerColor = Color(0xFF141414),
+        tonalElevation = 8.dp,
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 16.dp)
+            .navigationBarsPadding()
+            .height(64.dp)
+            .shadow(elevation = 12.dp, shape = CircleShape)
+            .clip(CircleShape)
+            .border(
+                width = 1.5.dp,
+                color = Color.White.copy(alpha = 0.12f),
+                shape = CircleShape
+            )
     ) {
         val colors = NavigationBarItemDefaults.colors(
             selectedIconColor = Color.White,
@@ -798,7 +813,7 @@ private fun ContentRow(
     showProgress:  Boolean = false,
     progressItems: List<WatchProgress> = emptyList(),
 ) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+    Column(modifier = Modifier.padding(vertical = 6.dp)) {
         Text(
             text       = title,
             color      = Color.White,
@@ -1025,7 +1040,7 @@ private fun WideContentCard(
 // ─── Skeleton Loader ──────────────────────────────────────────
 
 @Composable
-private fun HomeSkeletonLoader() {
+private fun HomeSkeletonLoader(bottomPadding: Dp = 0.dp) {
     val transition = rememberInfiniteTransition(label = "homeShimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
@@ -1052,7 +1067,7 @@ private fun HomeSkeletonLoader() {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 16.dp)
+        contentPadding = PaddingValues(bottom = bottomPadding + 16.dp)
     ) {
         // 1. App Header/Logo Area placeholder
         item {

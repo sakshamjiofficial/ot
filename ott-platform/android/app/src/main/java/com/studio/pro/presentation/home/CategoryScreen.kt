@@ -190,7 +190,12 @@ fun CategoryScreen(
                                 else -> true
                             }
                             val matchesGenre = selectedGenre == null || item.genres.any { it.id == selectedGenre!!.id }
-                            matchesType && matchesGenre
+                            val isDuplicateFeatured = section.sectionType != "featured" && (
+                                item.id == selectedSeriesBannerId ||
+                                item.id == selectedMovieBannerId ||
+                                item.id == selectedGenericBannerId
+                            )
+                            matchesType && matchesGenre && !isDuplicateFeatured
                         }
 
                         if (filteredItems.isNotEmpty()) {
@@ -527,7 +532,7 @@ private fun ContentRow(
     showProgress:  Boolean = false,
     progressItems: List<WatchProgress> = emptyList(),
 ) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+    Column(modifier = Modifier.padding(vertical = 6.dp)) {
         Text(
             text       = title,
             color      = Color.White,

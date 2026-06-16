@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, MoreThan } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserEntity, UserRole } from './entities/user.entity';
 import { DeviceEntity, DeviceType } from './entities/device.entity';
@@ -82,6 +82,26 @@ export class UsersService {
     }
 
     const [users, total] = await qb.getManyAndCount();
+
+    const userIds = users.map(u => u.id);
+    if (userIds.length > 0) {
+      const activeSubs = await this.userRepo.manager.getRepository('SubscriptionEntity').find({
+        where: {
+          userId: In(userIds),
+          status: 'active' as any,
+          expiresAt: MoreThan(new Date()),
+        },
+      }) as any[];
+      
+      const activeSubsMap = new Map(activeSubs.map(s => [s.userId, s]));
+      users.forEach(u => {
+        const sub = activeSubsMap.get(u.id);
+        u.hasActiveSubscription = !!sub;
+        if (sub) {
+          u.subscriptionExpiry = sub.expiresAt;
+        }
+      });
+    }
 
     const totalActive = await this.userRepo.count({ where: { isActive: true } });
     const totalAdmins = await this.userRepo.count({
@@ -257,6 +277,7 @@ export class UsersService {
       email:       dto.email.toLowerCase().trim(),
       phone:       dto.phone,
       displayName: dto.displayName || dto.email.split('@')[0],
+      avatarUrl:   dto.avatarUrl,
       passwordHash,
       role:        dto.role,
       isActive:    true,
@@ -272,6 +293,7 @@ export class UsersService {
 
     if (dto.displayName !== undefined) user.displayName = dto.displayName;
     if (dto.phone !== undefined)       user.phone       = dto.phone;
+    if (dto.avatarUrl !== undefined)   user.avatarUrl   = dto.avatarUrl;
     if (dto.role !== undefined)        user.role        = dto.role;
     if (dto.isActive !== undefined)    user.isActive    = dto.isActive;
 

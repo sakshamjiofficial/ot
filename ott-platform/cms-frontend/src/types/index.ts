@@ -182,12 +182,14 @@ export interface AdminUser {
   email:               string;
   displayName?:        string;
   phone?:              string;
+  avatarUrl?:          string;
   role:                string;
   isActive:            boolean;
   isEmailVerified:     boolean;
   lastLoginAt?:        string;
   createdAt:           string;
   hasActiveSubscription?: boolean;
+  subscriptionExpiry?: string;
 }
 
 // ─── Analytics / Dashboard ─────────────────────────────────────

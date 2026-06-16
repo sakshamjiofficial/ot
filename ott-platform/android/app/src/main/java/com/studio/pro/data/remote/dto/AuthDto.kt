@@ -59,3 +59,10 @@ data class UserDto(
     @SerializedName("hasActiveSubscription") val hasActiveSubscription: Boolean = false,
     @SerializedName("createdAt")           val createdAt:           String,
 )
+
+data class BannerDto(
+    @SerializedName("id")        val id:        String,
+    @SerializedName("title")     val title:     String?,
+    @SerializedName("imageUrl")  val imageUrl:  String,
+    @SerializedName("isActive")  val isActive:  Boolean,
+)
