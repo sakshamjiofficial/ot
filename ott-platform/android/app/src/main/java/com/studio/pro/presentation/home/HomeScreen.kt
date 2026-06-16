@@ -221,10 +221,14 @@ fun HomeScreen(
                     // ── Dynamic Sections ───────────────────────────
                     items(uiState.homeSections) { section ->
                         val filteredItems = section.items.filter { item ->
-                            val matchesType = when (selectedFilter) {
-                                "Series" -> item.type == ContentType.SERIES
-                                "Films" -> item.type == ContentType.MOVIE
-                                else -> true
+                            val matchesType = if (section.title.equals("Action Movies", ignoreCase = true)) {
+                                true
+                            } else {
+                                when (selectedFilter) {
+                                    "Series" -> item.type == ContentType.SERIES
+                                    "Films" -> item.type == ContentType.MOVIE
+                                    else -> true
+                                }
                             }
                             val matchesGenre = selectedGenre == null || item.genres.any { it.id == selectedGenre!!.id }
                             val isDuplicateFeatured = section.sectionType != "featured" && (
