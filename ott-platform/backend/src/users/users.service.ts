@@ -91,6 +91,7 @@ export class UsersService {
           status: 'active' as any,
           expiresAt: MoreThan(new Date()),
         },
+        relations: ['plan'],
       }) as any[];
       
       const activeSubsMap = new Map(activeSubs.map(s => [s.userId, s]));
@@ -99,6 +100,7 @@ export class UsersService {
         u.hasActiveSubscription = !!sub;
         if (sub) {
           u.subscriptionExpiry = sub.expiresAt;
+          u.subscriptionPlanName = sub.plan?.name;
         }
       });
     }

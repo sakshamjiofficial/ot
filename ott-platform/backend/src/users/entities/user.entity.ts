@@ -64,4 +64,5 @@ export class UserEntity {
   // Virtual — populated from active subscription check
   hasActiveSubscription?: boolean;
   subscriptionExpiry?: Date;
+  subscriptionPlanName?: string;
 }

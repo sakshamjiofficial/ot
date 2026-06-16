@@ -190,6 +190,7 @@ export interface AdminUser {
   createdAt:           string;
   hasActiveSubscription?: boolean;
   subscriptionExpiry?: string;
+  subscriptionPlanName?: string;
 }
 
 // ─── Analytics / Dashboard ─────────────────────────────────────

@@ -107,7 +107,7 @@ export default function UserManagement() {
         <div className="flex flex-col gap-1">
           {row.hasActiveSubscription ? (
             <>
-              <Badge variant="success">Active</Badge>
+              <Badge variant="success">{row.subscriptionPlanName || 'Active'}</Badge>
               {row.subscriptionExpiry && (
                 <span className="text-[10px] text-green-400">
                   Expires {formatDate(row.subscriptionExpiry)}
@@ -564,7 +564,7 @@ function UserSubscriptionModal({ user, onClose, onSaved }: UserSubscriptionModal
             <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4">
               <div className="flex items-center gap-2 text-green-400 font-medium mb-1">
                 <Sparkles size={16} />
-                <span>Active Premium Subscription</span>
+                <span>Active Subscription: {user.subscriptionPlanName || 'Premium'}</span>
               </div>
               {user.subscriptionExpiry && (
                 <p className="text-xs text-surface-300">
@@ -573,7 +573,42 @@ function UserSubscriptionModal({ user, onClose, onSaved }: UserSubscriptionModal
               )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="border-t border-surface-600/50 pt-4 space-y-4">
+              <div className="flex items-center gap-2 text-white font-medium text-sm">
+                <Sparkles size={16} className="text-brand-400" />
+                <span>Upgrade / Change Plan</span>
+              </div>
+              <form onSubmit={handleActivate} className="space-y-4">
+                {plansLoading ? (
+                  <p className="text-xs text-surface-400">Loading subscription plans...</p>
+                ) : activePlans.length === 0 ? (
+                  <p className="text-xs text-red-400">No active subscription plans found.</p>
+                ) : (
+                  <Select
+                    label="Choose New Plan"
+                    value={selectedPlanId}
+                    onChange={(e) => setSelectedPlanId(e.target.value)}
+                    options={activePlans.map((p: any) => ({
+                      value: p.id.toString(),
+                      label: `${p.name} (${p.planType}) - ₹${p.priceInr} for ${p.durationDays} days`,
+                    }))}
+                  />
+                )}
+
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="submit"
+                    loading={loading || plansLoading}
+                    disabled={activePlans.length === 0}
+                    size="sm"
+                  >
+                    Upgrade Plan
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            <div className="flex justify-between items-center border-t border-surface-600/50 pt-4">
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
               <Button
                 type="button"
