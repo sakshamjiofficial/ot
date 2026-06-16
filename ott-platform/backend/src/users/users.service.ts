@@ -13,6 +13,7 @@ import { DeviceEntity, DeviceType } from './entities/device.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto, AdminCreateUserDto, AdminUpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { BannerEntity } from '../banners/entities/banner.entity';
 
 @Injectable()
 export class UsersService {
@@ -39,12 +40,25 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(dto.password, this.SALT_ROUNDS);
 
+    let defaultAvatarUrl: string | undefined;
+    try {
+      const banner = await this.userRepo.manager.getRepository(BannerEntity).findOne({
+        where: { sortOrder: 0, isActive: true },
+      });
+      if (banner) {
+        defaultAvatarUrl = banner.imageUrl;
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to find default avatar with sortOrder = 0: ${err.message}`);
+    }
+
     const user = this.userRepo.create({
       email:       dto.email.toLowerCase().trim(),
       phone:       dto.phone,
       displayName: dto.displayName || dto.email.split('@')[0],
       passwordHash,
       role:        UserRole.USER,
+      avatarUrl:   defaultAvatarUrl,
     });
 
     return this.userRepo.save(user);

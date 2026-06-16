@@ -188,6 +188,12 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var showPw   by remember { mutableStateOf(false) }
 
+    val hasMinLength = password.length >= 8
+    val hasUppercase = password.any { it.isUpperCase() }
+    val hasLowercase = password.any { it.isLowerCase() }
+    val hasDigit     = password.any { it.isDigit() }
+    val isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasDigit
+
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) onRegisterSuccess()
     }
@@ -213,10 +219,19 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value            = name,
-                onValueChange    = { name = it },
+                onValueChange    = { input ->
+                    name = if (input.isNotEmpty()) {
+                        input.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    } else {
+                        input
+                    }
+                },
                 label            = { Text("Display Name") },
                 leadingIcon      = { Icon(Icons.Default.Person, contentDescription = null) },
-                keyboardOptions  = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardOptions  = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction      = ImeAction.Next
+                ),
                 keyboardActions  = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) }),
                 singleLine       = true,
                 modifier         = Modifier.fillMaxWidth(),
@@ -251,12 +266,28 @@ fun RegisterScreen(
                 keyboardOptions      = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                 keyboardActions      = KeyboardActions(onDone = {
                     focusMgr.clearFocus()
-                    viewModel.register(email, password, name)
+                    if (isPasswordValid && name.isNotBlank() && email.isNotBlank()) {
+                        viewModel.register(email, password, name)
+                    }
                 }),
                 singleLine           = true,
                 modifier             = Modifier.fillMaxWidth(),
                 colors               = OttTextFieldColors(),
             )
+
+            Spacer(Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text("Password must contain:", color = OttColors.TextMuted, fontSize = 12.sp)
+                RequirementRow(text = "At least 8 characters", isMet = hasMinLength)
+                RequirementRow(text = "An uppercase letter (A-Z)", isMet = hasUppercase)
+                RequirementRow(text = "A lowercase letter (a-z)", isMet = hasLowercase)
+                RequirementRow(text = "A number (0-9)", isMet = hasDigit)
+            }
 
             if (uiState is AuthUiState.Error) {
                 Spacer(Modifier.height(10.dp))
@@ -267,7 +298,7 @@ fun RegisterScreen(
 
             Button(
                 onClick  = { viewModel.register(email, password, name) },
-                enabled  = email.isNotBlank() && password.isNotBlank() && uiState !is AuthUiState.Loading,
+                enabled  = email.isNotBlank() && isPasswordValid && name.isNotBlank() && uiState !is AuthUiState.Loading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape    = RoundedCornerShape(10.dp),
                 colors   = ButtonDefaults.buttonColors(containerColor = OttColors.Brand),
@@ -300,6 +331,27 @@ fun RegisterScreen(
         }
     }
 }
+
+@Composable
+private fun RequirementRow(text: String, isMet: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Icon(
+            imageVector = if (isMet) Icons.Default.CheckCircle else Icons.Default.Cancel,
+            contentDescription = null,
+            tint = if (isMet) Color(0xFF10B981) else Color(0xFFEF4444),
+            modifier = Modifier.size(14.dp)
+        )
+        Text(
+            text = text,
+            color = if (isMet) Color(0xFF10B981) else OttColors.TextMuted,
+            fontSize = 11.sp
+        )
+    }
+}
+
 
 @Composable
 fun OttTextFieldColors() = OutlinedTextFieldDefaults.colors(
