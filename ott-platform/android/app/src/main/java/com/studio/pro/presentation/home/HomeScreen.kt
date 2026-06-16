@@ -337,7 +337,7 @@ private fun HomeTopBar(
     ) {
         // Left side: Wide splash logo
         Image(
-            painter = painterResource(id = R.drawable.ic_splash_logo),
+            painter = painterResource(id = R.drawable.homelogo),
             contentDescription = "App Logo",
             modifier = Modifier.height(48.dp),
             contentScale = ContentScale.Fit
