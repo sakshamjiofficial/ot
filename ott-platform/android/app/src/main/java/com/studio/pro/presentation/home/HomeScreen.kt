@@ -335,25 +335,13 @@ private fun HomeTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment     = Alignment.CenterVertically,
     ) {
-        // Left side: Vertical red brand logo icon + bold white title "Home"
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(8.dp)
-                    .height(26.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(OttColors.Brand)
-            )
-            Text(
-                text = "Home",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp
-            )
-        }
+        // Left side: Wide splash logo
+        Image(
+            painter = painterResource(id = R.drawable.ic_splash_logo),
+            contentDescription = "App Logo",
+            modifier = Modifier.height(32.dp),
+            contentScale = ContentScale.Fit
+        )
 
         // Right side: white Download tray icon + white Notification Bell with red badge '5'
         Row(
