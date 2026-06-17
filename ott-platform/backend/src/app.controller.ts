@@ -9,7 +9,7 @@ export class AppController {
   @Get()
   @ApiOperation({ summary: 'Download latest Android APK' })
   downloadApk(@Res() res: Response) {
-    const apkPath = '/workspaces/Kaler/ott-platform/android/app/build/outputs/apk/debug/app-debug.apk';
+    const apkPath = '/workspaces/ot/ott-platform/android/app/build/outputs/apk/debug/app-debug.apk';
     if (!existsSync(apkPath)) {
       res.status(404).send('APK file not found. Please build the Android app first.');
       return;

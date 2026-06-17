@@ -13,6 +13,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
@@ -45,14 +46,14 @@ fun LoginScreen(
             .background(OttColors.Background)
             .imePadding(),
     ) {
-        // Background gradient
+        // Top cinematic ambient gradient
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(280.dp)
+                .height(300.dp)
                 .background(
                     Brush.verticalGradient(
-                        listOf(OttColors.Brand.copy(alpha = 0.15f), Color.Transparent)
+                        listOf(OttColors.Brand.copy(alpha = 0.20f), Color.Transparent)
                     )
                 )
         )
@@ -64,26 +65,23 @@ fun LoginScreen(
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(80.dp))
+            Spacer(Modifier.height(70.dp))
 
-            // Logo
-            Box(
+            // Logo with ContentScale.Fit and correct aspect ratio
+            Image(
+                painter = painterResource(id = R.drawable.homelogo),
+                contentDescription = "Studio Logo",
                 modifier = Modifier
-                    .size(72.dp)
-                    .background(Color.Black, RoundedCornerShape(18.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_app_logo),
-                    contentDescription = null,
-                    modifier = Modifier.size(56.dp)
-                )
-            }
+                    .width(180.dp)
+                    .height(72.dp),
+                contentScale = ContentScale.Fit
+            )
 
-            Spacer(Modifier.height(20.dp))
-            Text("Welcome Back", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 26.sp)
-            Text("Sign in to continue watching", color = OttColors.TextMuted, fontSize = 14.sp)
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(24.dp))
+            Text("Welcome Back", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
+            Spacer(Modifier.height(4.dp))
+            Text("Sign in to continue watching", color = OttColors.TextSecondary, fontSize = 14.sp)
+            Spacer(Modifier.height(36.dp))
 
             // Email
             OutlinedTextField(
@@ -97,6 +95,7 @@ fun LoginScreen(
                 ),
                 keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) }),
                 singleLine       = true,
+                shape            = RoundedCornerShape(12.dp),
                 modifier         = Modifier.fillMaxWidth(),
                 colors           = OttTextFieldColors(),
             )
@@ -127,50 +126,60 @@ fun LoginScreen(
                     viewModel.login(email, password)
                 }),
                 singleLine       = true,
+                shape            = RoundedCornerShape(12.dp),
                 modifier         = Modifier.fillMaxWidth(),
                 colors           = OttTextFieldColors(),
             )
 
             // Error
             if (uiState is AuthUiState.Error) {
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(12.dp))
                 Text(
                     text     = (uiState as AuthUiState.Error).message,
                     color    = Color(0xFFEF4444),
                     fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
 
             // Sign In Button
             Button(
                 onClick  = { viewModel.login(email, password) },
                 enabled  = email.isNotBlank() && password.isNotBlank() && uiState !is AuthUiState.Loading,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape    = RoundedCornerShape(10.dp),
-                colors   = ButtonDefaults.buttonColors(containerColor = OttColors.Brand),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape    = RoundedCornerShape(12.dp),
+                colors   = ButtonDefaults.buttonColors(
+                    containerColor = OttColors.Brand,
+                    disabledContainerColor = OttColors.Brand.copy(alpha = 0.5f),
+                    contentColor = Color.White,
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                ),
             ) {
                 if (uiState is AuthUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                 } else {
-                    Text("Sign In", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text("Sign In", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
 
             // Register link
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Don't have an account? ", color = OttColors.TextMuted, fontSize = 14.sp)
+                Text("Don't have an account? ", color = OttColors.TextSecondary, fontSize = 14.sp)
                 Text(
                     "Sign Up",
                     color     = OttColors.Brand,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize  = 14.sp,
                     modifier  = Modifier.clickable { onRegisterClick() },
                 )
             }
+            Spacer(Modifier.height(30.dp))
         }
     }
 }
@@ -204,6 +213,18 @@ fun RegisterScreen(
             .background(OttColors.Background)
             .imePadding(),
     ) {
+        // Top cinematic ambient gradient
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(OttColors.Brand.copy(alpha = 0.20f), Color.Transparent)
+                    )
+                )
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -211,11 +232,23 @@ fun RegisterScreen(
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(50.dp))
 
-            Text("Create Account", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 26.sp)
-            Text("Start watching in minutes", color = OttColors.TextMuted, fontSize = 14.sp)
-            Spacer(Modifier.height(36.dp))
+            // Logo with ContentScale.Fit and correct aspect ratio
+            Image(
+                painter = painterResource(id = R.drawable.homelogo),
+                contentDescription = "Studio Logo",
+                modifier = Modifier
+                    .width(180.dp)
+                    .height(72.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(Modifier.height(20.dp))
+            Text("Create Account", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
+            Spacer(Modifier.height(4.dp))
+            Text("Start watching in minutes", color = OttColors.TextSecondary, fontSize = 14.sp)
+            Spacer(Modifier.height(32.dp))
 
             OutlinedTextField(
                 value            = name,
@@ -234,6 +267,7 @@ fun RegisterScreen(
                 ),
                 keyboardActions  = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) }),
                 singleLine       = true,
+                shape            = RoundedCornerShape(12.dp),
                 modifier         = Modifier.fillMaxWidth(),
                 colors           = OttTextFieldColors(),
             )
@@ -247,6 +281,7 @@ fun RegisterScreen(
                 keyboardOptions  = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                 keyboardActions  = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) }),
                 singleLine       = true,
+                shape            = RoundedCornerShape(12.dp),
                 modifier         = Modifier.fillMaxWidth(),
                 colors           = OttTextFieldColors(),
             )
@@ -271,52 +306,73 @@ fun RegisterScreen(
                     }
                 }),
                 singleLine           = true,
+                shape                = RoundedCornerShape(12.dp),
                 modifier             = Modifier.fillMaxWidth(),
                 colors               = OttTextFieldColors(),
             )
 
-            Spacer(Modifier.height(8.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Spacer(Modifier.height(16.dp))
+
+            // Premium Card for Password requirements checklist
+            Card(
+                colors = CardDefaults.cardColors(containerColor = OttColors.Surface),
+                border = BorderStroke(1.dp, OttColors.Border),
+                shape  = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Password must contain:", color = OttColors.TextMuted, fontSize = 12.sp)
-                RequirementRow(text = "At least 8 characters", isMet = hasMinLength)
-                RequirementRow(text = "An uppercase letter (A-Z)", isMet = hasUppercase)
-                RequirementRow(text = "A lowercase letter (a-z)", isMet = hasLowercase)
-                RequirementRow(text = "A number (0-9)", isMet = hasDigit)
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("Password must contain:", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Spacer(Modifier.height(2.dp))
+                    RequirementRow(text = "At least 8 characters", isMet = hasMinLength)
+                    RequirementRow(text = "An uppercase letter (A-Z)", isMet = hasUppercase)
+                    RequirementRow(text = "A lowercase letter (a-z)", isMet = hasLowercase)
+                    RequirementRow(text = "A number (0-9)", isMet = hasDigit)
+                }
             }
 
             if (uiState is AuthUiState.Error) {
-                Spacer(Modifier.height(10.dp))
-                Text((uiState as AuthUiState.Error).message, color = Color(0xFFEF4444), fontSize = 13.sp)
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = (uiState as AuthUiState.Error).message,
+                    color = Color(0xFFEF4444),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
 
             Button(
                 onClick  = { viewModel.register(email, password, name) },
                 enabled  = email.isNotBlank() && isPasswordValid && name.isNotBlank() && uiState !is AuthUiState.Loading,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape    = RoundedCornerShape(10.dp),
-                colors   = ButtonDefaults.buttonColors(containerColor = OttColors.Brand),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape    = RoundedCornerShape(12.dp),
+                colors   = ButtonDefaults.buttonColors(
+                    containerColor = OttColors.Brand,
+                    disabledContainerColor = OttColors.Brand.copy(alpha = 0.5f),
+                    contentColor = Color.White,
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                ),
             ) {
                 if (uiState is AuthUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                 } else {
-                    Text("Create Account", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text("Create Account", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Already have an account? ", color = OttColors.TextMuted, fontSize = 14.sp)
+                Text("Already have an account? ", color = OttColors.TextSecondary, fontSize = 14.sp)
                 Text(
                     "Sign In",
                     color      = OttColors.Brand,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize   = 14.sp,
                     modifier   = Modifier.clickable { onLoginClick() },
                 )
@@ -327,7 +383,10 @@ fun RegisterScreen(
                 "By creating an account you agree to our Terms of Service and Privacy Policy.",
                 color    = OttColors.TextMuted,
                 fontSize = 11.sp,
+                modifier = Modifier.fillMaxWidth(),
+                lineHeight = 16.sp
             )
+            Spacer(Modifier.height(30.dp))
         }
     }
 }
@@ -342,16 +401,15 @@ private fun RequirementRow(text: String, isMet: Boolean) {
             imageVector = if (isMet) Icons.Default.CheckCircle else Icons.Default.Cancel,
             contentDescription = null,
             tint = if (isMet) Color(0xFF10B981) else Color(0xFFEF4444),
-            modifier = Modifier.size(14.dp)
+            modifier = Modifier.size(15.dp)
         )
         Text(
             text = text,
-            color = if (isMet) Color(0xFF10B981) else OttColors.TextMuted,
-            fontSize = 11.sp
+            color = if (isMet) Color(0xFF10B981) else OttColors.TextSecondary,
+            fontSize = 12.sp
         )
     }
 }
-
 
 @Composable
 fun OttTextFieldColors() = OutlinedTextFieldDefaults.colors(
@@ -364,4 +422,8 @@ fun OttTextFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedTextColor   = Color.White,
     focusedLeadingIconColor   = OttColors.Brand,
     unfocusedLeadingIconColor = OttColors.TextMuted,
+    focusedContainerColor = OttColors.Surface,
+    unfocusedContainerColor = OttColors.Surface,
+    focusedTrailingIconColor = Color.White,
+    unfocusedTrailingIconColor = OttColors.TextMuted,
 )
