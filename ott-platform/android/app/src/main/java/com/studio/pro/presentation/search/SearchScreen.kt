@@ -163,15 +163,44 @@ private fun SearchResultRow(item: Content, onClick: () -> Unit) {
             }
         }
 
-        Text(
-            text = item.title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(4.dp))
+            val metaList = remember(item) {
+                val list = mutableListOf<String>()
+                item.releaseYear?.let { list.add(it.toString()) }
+                val formattedDuration = formatDuration(item.durationSeconds)
+                if (formattedDuration.isNotEmpty()) {
+                    list.add(formattedDuration)
+                }
+                list
+            }
+            if (metaList.isNotEmpty()) {
+                Text(
+                    text = metaList.joinToString(" · "),
+                    color = OttColors.TextMuted,
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
+}
+
+private fun formatDuration(seconds: Int?): String {
+    if (seconds == null || seconds <= 0) return ""
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    return if (hours > 0) {
+        if (minutes > 0) "${hours}h ${minutes}m" else "${hours}h"
+    } else {
+        "${minutes}m"
     }
 }
 
