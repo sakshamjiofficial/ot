@@ -68,30 +68,36 @@ fun SearchScreen(
                 .padding(bottom = paddingValues.calculateBottomPadding()),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
-                OutlinedTextField(
+                Spacer(Modifier.width(4.dp))
+                TextField(
                     value         = query,
                     onValueChange = { query = it; viewModel.search(it) },
-                    placeholder   = { Text("Movies, series, genres…", color = OttColors.TextMuted) },
-                    leadingIcon   = { Icon(Icons.Default.Search, null, tint = OttColors.TextMuted) },
+                    placeholder   = { Text("Movies, series, genres…", color = OttColors.TextMuted, fontSize = 15.sp) },
+                    leadingIcon   = { Icon(Icons.Default.Search, null, tint = OttColors.TextMuted, modifier = Modifier.size(22.dp)) },
                     trailingIcon  = if (query.isNotEmpty()) {
                         { IconButton(onClick = { query = ""; viewModel.search("") }) {
                             Icon(Icons.Default.Clear, null, tint = OttColors.TextMuted)
                         }}
                     } else null,
                     singleLine    = true,
-                    modifier      = Modifier.weight(1f),
-                    shape         = RoundedCornerShape(12.dp),
-                    colors        = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = OttColors.Brand,
-                        unfocusedBorderColor = OttColors.Border,
-                        focusedTextColor     = Color.White,
-                        unfocusedTextColor   = Color.White,
+                    modifier      = Modifier
+                        .weight(1f)
+                        .heightIn(min = 52.dp),
+                    shape         = RoundedCornerShape(26.dp),
+                    colors        = TextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedContainerColor = Color(0xFF1E1E1E),
+                        unfocusedContainerColor = Color(0xFF1A1A1A),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
                     ),
                 )
             }
@@ -124,14 +130,18 @@ fun SearchScreen(
 @Composable
 private fun SearchResultRow(item: Content, onClick: () -> Unit) {
     Row(
-        modifier              = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier              = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
         verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(64.dp, 90.dp)
-                .background(OttColors.SurfaceVariant, RoundedCornerShape(6.dp)),
+                .size(100.dp, 145.dp)
+                .background(OttColors.SurfaceVariant, RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(8.dp)),
         ) {
             AsyncImage(
                 model              = item.posterUrl ?: item.thumbnailUrl,
@@ -139,41 +149,29 @@ private fun SearchResultRow(item: Content, onClick: () -> Unit) {
                 contentScale       = ContentScale.Crop,
                 modifier           = Modifier.fillMaxSize(),
             )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(item.title, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(3.dp))
-            Text(
-                "${item.type.name.lowercase().replaceFirstChar { it.uppercase() }} · ${item.releaseYear ?: ""}",
-                color = OttColors.TextMuted, fontSize = 13.sp,
-            )
-            item.imdbRating?.let {
-                Spacer(Modifier.height(2.dp))
-                Text("⭐ $it / 10", color = OttColors.TextMuted, fontSize = 12.sp)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
-                item.genres.take(2).forEach { genre ->
-                    Box(
-                        modifier = Modifier
-                            .background(OttColors.SurfaceElevated, RoundedCornerShape(4.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text(genre.name, color = OttColors.TextSecondary, fontSize = 10.sp)
-                    }
+            if (item.isPremium) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(OttColors.Brand)
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                ) {
+                    Text("PRO", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
-        if (item.isPremium) {
-            Box(
-                modifier = Modifier
-                    .background(OttColors.Brand, RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 3.dp),
-            ) {
-                Text("PRO", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            }
-        }
+        Text(
+            text = item.title,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -184,64 +182,37 @@ private fun SearchShimmerPlaceholder() {
         verticalArrangement = Arrangement.spacedBy(14.dp),
         userScrollEnabled   = false,
     ) {
-        items(6) {
+        items(5) {
             Row(
-                modifier              = Modifier.fillMaxWidth(),
+                modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 verticalAlignment     = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 // Image Placeholder
                 Box(
                     modifier = Modifier
-                        .size(64.dp, 90.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                        .size(100.dp, 145.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .shimmerEffect()
                 )
 
-                // Info Placeholder
+                // Title Placeholder
                 Column(modifier = Modifier.weight(1f)) {
-                    // Title
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.7f)
-                            .height(16.dp)
+                            .fillMaxWidth(0.9f)
+                            .height(18.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .shimmerEffect()
                     )
                     Spacer(Modifier.height(8.dp))
-                    // Subtitle
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.4f)
-                            .height(12.dp)
+                            .fillMaxWidth(0.5f)
+                            .height(18.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .shimmerEffect()
                     )
-                    Spacer(Modifier.height(8.dp))
-                    // Rating/meta
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.2f)
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .shimmerEffect()
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    // Genre Tags
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp, 16.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .shimmerEffect()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp, 16.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .shimmerEffect()
-                        )
-                    }
                 }
             }
         }
