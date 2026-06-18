@@ -33,6 +33,7 @@ fun ProfileScreen(
     onBack:                  () -> Unit,
     onLogout:                () -> Unit,
     onNavigateToSubscription: () -> Unit,
+    onNavigateToWatchlist:   () -> Unit,
     authViewModel:           AuthViewModel = hiltViewModel(),
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
@@ -326,7 +327,9 @@ fun ProfileScreen(
                             ProfileMenuItem(Icons.Default.Subscriptions, "My Subscription") {
                                 onNavigateToSubscription()
                             }
-                            ProfileMenuItem(Icons.Default.BookmarkBorder, "My Watchlist") {}
+                            ProfileMenuItem(Icons.Default.BookmarkBorder, "My Watchlist") {
+                                onNavigateToWatchlist()
+                            }
                             ProfileMenuItem(Icons.Default.History, "Watch History") {}
                             ProfileMenuItem(Icons.Default.Devices, "Manage Devices") {}
                         }

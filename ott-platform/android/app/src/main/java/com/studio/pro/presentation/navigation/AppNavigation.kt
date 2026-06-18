@@ -17,6 +17,7 @@ import com.studio.pro.presentation.search.SearchScreen
 import com.studio.pro.presentation.profile.ProfileScreen
 import com.studio.pro.presentation.profile.ChooseProfileScreen
 import com.studio.pro.presentation.auth.AuthUiState
+import com.studio.pro.presentation.watchlist.WatchlistScreen
 import com.studio.pro.presentation.content.ContentDetailScreen
 import com.studio.pro.presentation.splash.SplashScreen
 
@@ -35,6 +36,7 @@ object Routes {
     const val CHOOSE_PROFILE = "choose_profile"
     const val SUBSCRIPTION   = "subscription"
     const val DOWNLOADS      = "downloads"
+    const val WATCHLIST      = "watchlist"
 
     fun contentDetail(id: String) = "content/$id"
     fun playerContent(id: String) = "player/content/$id"
@@ -167,7 +169,15 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onNavigateToSubscription = { navController.navigate(Routes.SUBSCRIPTION) }
+                onNavigateToSubscription = { navController.navigate(Routes.SUBSCRIPTION) },
+                onNavigateToWatchlist = { navController.navigate(Routes.WATCHLIST) }
+            )
+        }
+
+        composable(Routes.WATCHLIST) {
+            WatchlistScreen(
+                onContentClick = { id -> navController.navigate(Routes.contentDetail(id)) },
+                onBack = { navController.popBackStack() }
             )
         }
 
