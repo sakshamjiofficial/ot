@@ -421,7 +421,7 @@ export class ContentService {
     const { page = 1, limit = 20 } = pagination;
     const skip = (page - 1) * limit;
 
-    const [rows, total]: [any[], number] = await this.dataSource.query(
+    const rows: any[] = await this.dataSource.query(
       `SELECT c.*, w.added_at
        FROM watchlist w
        JOIN content c ON c.id = w.content_id
@@ -436,11 +436,12 @@ export class ContentService {
       `SELECT COUNT(*) FROM watchlist WHERE user_id = $1`,
       [userId],
     );
+    const total = parseInt(countRow[0]?.count || '0');
 
     return {
       items: rows,
       meta: {
-        total: parseInt(countRow[0]?.count || '0'),
+        total,
         page, limit,
         totalPages: Math.ceil(total / limit),
       },
