@@ -89,7 +89,7 @@ fun SearchScreen(
                     modifier      = Modifier
                         .weight(1f)
                         .heightIn(min = 52.dp),
-                    shape         = RoundedCornerShape(26.dp),
+                    shape         = RoundedCornerShape(12.dp),
                     colors        = TextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
