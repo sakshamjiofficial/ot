@@ -37,7 +37,7 @@ export async function updateJobStatus(
   try {
     await db.query(
       `UPDATE transcoding_jobs
-       SET status         = $1,
+       SET status         = $1::job_status,
            progress       = $2,
            error_message  = $3,
            worker_id      = COALESCE($4, worker_id),

@@ -40,6 +40,7 @@ class ExoPlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val tokenStorage: TokenStorage,
     private val okHttpClient: OkHttpClient,
+    private val downloadManager: com.studio.pro.download.DownloadManager,
 ) {
     private var exoPlayer: ExoPlayer?      = null
     private var trackSelector: DefaultTrackSelector? = null
@@ -111,8 +112,6 @@ class ExoPlayerManager @Inject constructor(
         return exoPlayer!!
     }
 
-    // ─── Load Media ───────────────────────────────────────────
-
     fun loadHls(
         masterUrl:    String,
         resumeAtMs:   Long = 0L,
@@ -121,6 +120,14 @@ class ExoPlayerManager @Inject constructor(
         subtitles:    List<Subtitle> = emptyList(),
         autoPlay:     Boolean = true,
     ) {
+        if (!downloadManager.verifySignedUrlLocally(masterUrl)) {
+            _playerState.value = _playerState.value.copy(
+                hasError     = true,
+                errorMessage = "Playback link has expired or is invalid.",
+            )
+            return
+        }
+
         val player = getOrCreatePlayer()
 
         introStartSec = introStart
@@ -134,7 +141,14 @@ class ExoPlayerManager @Inject constructor(
             )
         }
 
-        val hlsSource = HlsMediaSource.Factory(dataSourceFactory)
+        val cacheDataSourceFactory = androidx.media3.datasource.cache.CacheDataSource.Factory()
+            .setCache(downloadManager.downloadCache)
+            .setUpstreamDataSourceFactory(dataSourceFactory)
+            .setCacheReadDataSourceFactory(androidx.media3.datasource.FileDataSource.Factory())
+            .setCacheWriteDataSinkFactory(null)
+            .setFlags(androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
+        val hlsSource = HlsMediaSource.Factory(cacheDataSourceFactory)
             .createMediaSource(
                 MediaItem.Builder()
                     .setUri(masterUrl)

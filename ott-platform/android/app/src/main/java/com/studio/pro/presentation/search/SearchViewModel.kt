@@ -3,6 +3,8 @@ package com.studio.pro.presentation.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studio.pro.domain.model.Content
+import com.studio.pro.domain.model.User
+import com.studio.pro.domain.repository.AuthRepository
 import com.studio.pro.domain.repository.ContentRepository
 import com.studio.pro.domain.repository.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,11 +16,13 @@ data class SearchUiState(
     val isLoading: Boolean       = false,
     val results:   List<Content> = emptyList(),
     val error:     String?       = null,
+    val currentUser: User?       = null,
 )
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val contentRepository: ContentRepository,
+    private val authRepository:    AuthRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SearchUiState())
@@ -26,10 +30,21 @@ class SearchViewModel @Inject constructor(
 
     private var searchJob: Job? = null
 
+    init {
+        loadCurrentUser()
+    }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            val user = authRepository.getCurrentUser()
+            _state.update { it.copy(currentUser = user) }
+        }
+    }
+
     fun search(query: String) {
         searchJob?.cancel()
         if (query.isBlank()) {
-            _state.value = SearchUiState()
+            _state.update { it.copy(isLoading = false, results = emptyList(), error = null) }
             return
         }
         searchJob = viewModelScope.launch {
@@ -47,3 +62,4 @@ class SearchViewModel @Inject constructor(
         }
     }
 }
+

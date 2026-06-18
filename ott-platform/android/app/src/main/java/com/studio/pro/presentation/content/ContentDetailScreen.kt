@@ -43,10 +43,14 @@ fun ContentDetailScreen(
                 content       = uiState.content!!,
                 watchProgress = uiState.watchProgress,
                 isInWatchlist = uiState.isInWatchlist,
+                downloads     = uiState.downloads,
                 onBack        = onBack,
                 onPlay        = { if (uiState.content!!.type == ContentType.MOVIE) onPlayMovie(contentId) },
                 onPlayEpisode = onPlayEpisode,
                 onToggleWatchlist = { viewModel.toggleWatchlist(contentId) },
+                onDownloadMovie  = { viewModel.startDownload() },
+                onDownloadEpisode = { episode -> viewModel.startEpisodeDownload(episode) },
+                onCancelOrDeleteDownload = { id -> viewModel.cancelOrDeleteDownload(id) }
             )
         }
     }
@@ -57,10 +61,14 @@ private fun ContentDetailBody(
     content:          Content,
     watchProgress:    WatchProgress?,
     isInWatchlist:    Boolean,
+    downloads:        Map<String, com.studio.pro.data.local.database.DownloadedAssetEntity>,
     onBack:           () -> Unit,
     onPlay:           () -> Unit,
     onPlayEpisode:    (String) -> Unit,
     onToggleWatchlist: () -> Unit,
+    onDownloadMovie:  () -> Unit,
+    onDownloadEpisode: (Episode) -> Unit,
+    onCancelOrDeleteDownload: (String) -> Unit,
 ) {
     var selectedSeason by remember { mutableIntStateOf(0) }
     val isSeries       = content.type == ContentType.SERIES
@@ -126,8 +134,8 @@ private fun ContentDetailBody(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Play + Watchlist buttons
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Play + Watchlist + Download buttons
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Button(
                         onClick  = onPlay,
                         modifier = Modifier.weight(1f).height(48.dp),
@@ -151,6 +159,50 @@ private fun ContentDetailBody(
                             if (isInWatchlist) Icons.Default.BookmarkAdded else Icons.Default.BookmarkBorder,
                             null, tint = if (isInWatchlist) OttColors.Brand else Color.White,
                         )
+                    }
+
+                    if (content.type == ContentType.MOVIE) {
+                        val download = downloads[content.id]
+                        val state = download?.downloadState ?: "NOT_DOWNLOADED"
+                        val progress = download?.progress ?: 0f
+
+                        OutlinedButton(
+                            onClick  = {
+                                if (state == "DOWNLOADING" || state == "PENDING" || state == "COMPLETED") {
+                                    onCancelOrDeleteDownload(content.id)
+                                } else {
+                                    onDownloadMovie()
+                                }
+                            },
+                            modifier = Modifier.height(48.dp),
+                            shape    = RoundedCornerShape(8.dp),
+                            border   = BorderStroke(1.dp, if (state == "COMPLETED") OttColors.Brand else OttColors.Border),
+                        ) {
+                            when (state) {
+                                "PENDING", "DOWNLOADING" -> {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(
+                                            progress = { progress / 100f },
+                                            modifier = Modifier.size(20.dp),
+                                            color = OttColors.Brand,
+                                            strokeWidth = 2.dp
+                                        )
+                                        Icon(
+                                            Icons.Default.Close,
+                                            null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(10.dp)
+                                        )
+                                    }
+                                }
+                                "COMPLETED" -> {
+                                    Icon(Icons.Default.DownloadDone, null, tint = OttColors.Brand)
+                                }
+                                else -> {
+                                    Icon(Icons.Default.Download, null, tint = Color.White)
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -207,8 +259,18 @@ private fun ContentDetailBody(
             val currentSeason = content.seasons.getOrNull(selectedSeason)
             currentSeason?.episodes?.forEach { episode ->
                 item(key = episode.id) {
+                    val download = downloads[episode.id]
                     EpisodeRow(
                         episode    = episode,
+                        download   = download,
+                        onDownloadClick = {
+                            val state = download?.downloadState ?: "NOT_DOWNLOADED"
+                            if (state == "DOWNLOADING" || state == "PENDING" || state == "COMPLETED") {
+                                onCancelOrDeleteDownload(episode.id)
+                            } else {
+                                onDownloadEpisode(episode)
+                            }
+                        },
                         onClick    = { onPlayEpisode(episode.id) },
                     )
                 }
@@ -220,7 +282,12 @@ private fun ContentDetailBody(
 }
 
 @Composable
-private fun EpisodeRow(episode: Episode, onClick: () -> Unit) {
+private fun EpisodeRow(
+    episode: Episode,
+    download: com.studio.pro.data.local.database.DownloadedAssetEntity?,
+    onDownloadClick: () -> Unit,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -257,6 +324,39 @@ private fun EpisodeRow(episode: Episode, onClick: () -> Unit) {
             }
             episode.description?.let {
                 Text(it, color = OttColors.TextMuted, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+        }
+
+        val state = download?.downloadState ?: "NOT_DOWNLOADED"
+        val progress = download?.progress ?: 0f
+
+        IconButton(
+            onClick = onDownloadClick,
+            modifier = Modifier.size(40.dp)
+        ) {
+            when (state) {
+                "PENDING", "DOWNLOADING" -> {
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            progress = { progress / 100f },
+                            modifier = Modifier.size(24.dp),
+                            color = OttColors.Brand,
+                            strokeWidth = 2.dp
+                        )
+                        Icon(
+                            Icons.Default.Close,
+                            null,
+                            tint = Color.White,
+                            modifier = Modifier.size(10.dp)
+                        )
+                    }
+                }
+                "COMPLETED" -> {
+                    Icon(Icons.Default.DownloadDone, null, tint = OttColors.Brand)
+                }
+                else -> {
+                    Icon(Icons.Default.Download, null, tint = OttColors.TextSecondary)
+                }
             }
         }
     }

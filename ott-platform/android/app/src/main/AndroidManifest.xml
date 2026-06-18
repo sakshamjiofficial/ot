@@ -13,9 +13,10 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Picture-in-Picture -->
+    <!-- Foreground Service permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- Keep screen on during playback (set programmatically) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -74,6 +75,12 @@
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
         </service>
+
+        <!-- Video download manager service -->
+        <service
+            android:name=".download.OttDownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <!-- Network security config -->
         <meta-data

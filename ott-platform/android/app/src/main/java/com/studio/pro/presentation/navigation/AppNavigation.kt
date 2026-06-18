@@ -34,6 +34,7 @@ object Routes {
     const val MOVIES         = "movies"
     const val CHOOSE_PROFILE = "choose_profile"
     const val SUBSCRIPTION   = "subscription"
+    const val DOWNLOADS      = "downloads"
 
     fun contentDetail(id: String) = "content/$id"
     fun playerContent(id: String) = "player/content/$id"
@@ -120,6 +121,7 @@ fun AppNavigation(
                 onProfileClick     = { navController.navigate(Routes.PROFILE) },
                 onNavigateToSeries = { navController.navigate(Routes.SERIES) },
                 onNavigateToMovies = { navController.navigate(Routes.MOVIES) },
+                onDownloadsClick   = { navController.navigate(Routes.DOWNLOADS) },
             )
         }
 
@@ -143,6 +145,8 @@ fun AppNavigation(
             SearchScreen(
                 onContentClick = { id -> navController.navigate(Routes.contentDetail(id)) },
                 onBack         = { navController.popBackStack() },
+                onHomeClick    = { navController.navigate(Routes.HOME) },
+                onProfileClick = { navController.navigate(Routes.PROFILE) },
             )
         }
 
@@ -178,6 +182,14 @@ fun AppNavigation(
                 },
                 userEmail = user?.email ?: "",
                 userName = user?.displayName ?: "User"
+            )
+        }
+
+        composable(Routes.DOWNLOADS) {
+            com.studio.pro.presentation.downloads.DownloadsScreen(
+                onBack = { navController.popBackStack() },
+                onPlayContent = { id -> navController.navigate(Routes.playerContent(id)) },
+                onPlayEpisode = { epId -> navController.navigate(Routes.playerEpisode(epId)) }
             )
         }
 

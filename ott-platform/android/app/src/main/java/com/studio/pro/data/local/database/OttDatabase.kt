@@ -122,6 +122,45 @@ interface SearchHistoryDao {
     suspend fun clearAll()
 }
 
+@Entity(tableName = "downloaded_assets")
+data class DownloadedAssetEntity(
+    @PrimaryKey val id: String, // MovieId or EpisodeId
+    val contentId: String?,
+    val episodeId: String?,
+    val title: String,
+    val localUri: String?,
+    val r2Key: String,
+    val downloadState: String, // PENDING, DOWNLOADING, COMPLETED, FAILED, CANCELLED
+    val progress: Float,
+    val fileSizeBytes: Long = 0L,
+    val quality: String, // "Standard" | "HD"
+    val downloadedAt: Long = System.currentTimeMillis()
+)
+
+@Dao
+interface DownloadedAssetDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: DownloadedAssetEntity)
+
+    @Query("SELECT * FROM downloaded_assets WHERE id = :id")
+    suspend fun getById(id: String): DownloadedAssetEntity?
+
+    @Query("SELECT * FROM downloaded_assets ORDER BY downloadedAt DESC")
+    fun getAll(): Flow<List<DownloadedAssetEntity>>
+
+    @Query("SELECT * FROM downloaded_assets WHERE downloadState = :state")
+    suspend fun getByState(state: String): List<DownloadedAssetEntity>
+
+    @Query("UPDATE downloaded_assets SET downloadState = :state, progress = :progress, fileSizeBytes = :sizeBytes WHERE id = :id")
+    suspend fun updateProgress(id: String, state: String, progress: Float, sizeBytes: Long)
+
+    @Query("UPDATE downloaded_assets SET localUri = :localUri, downloadState = :state WHERE id = :id")
+    suspend fun markCompleted(id: String, localUri: String, state: String = "COMPLETED")
+
+    @Query("DELETE FROM downloaded_assets WHERE id = :id")
+    suspend fun deleteById(id: String)
+}
+
 // ─── Database ──────────────────────────────────────────────────
 
 @Database(
@@ -129,14 +168,16 @@ interface SearchHistoryDao {
         CachedContentEntity::class,
         WatchProgressEntity::class,
         SearchHistoryEntity::class,
+        DownloadedAssetEntity::class,
     ],
-    version  = 1,
+    version  = 2,
     exportSchema = false,
 )
 abstract class OttDatabase : RoomDatabase() {
     abstract fun contentDao():      ContentDao
     abstract fun watchProgressDao(): WatchProgressDao
     abstract fun searchHistoryDao(): SearchHistoryDao
+    abstract fun downloadedAssetDao(): DownloadedAssetDao
 
     companion object {
         const val DATABASE_NAME = "ott_db"

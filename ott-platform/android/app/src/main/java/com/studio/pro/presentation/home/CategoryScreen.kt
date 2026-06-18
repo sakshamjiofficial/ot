@@ -326,7 +326,7 @@ private fun CategoryHeroBanner(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         // Ambient Halo Glow
@@ -360,7 +360,7 @@ private fun CategoryHeroBanner(
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(featuredItem.posterUrl ?: featuredItem.thumbnailUrl ?: featuredItem.bannerUrl)
+                    .data(featuredItem.featurePosterUrl ?: featuredItem.posterUrl ?: featuredItem.thumbnailUrl ?: featuredItem.bannerUrl)
                     .allowHardware(false)
                     .build(),
                 contentDescription = featuredItem.title,

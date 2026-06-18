@@ -33,6 +33,10 @@ import androidx.media3.ui.PlayerView
 import com.studio.pro.presentation.common.OttColors
 import com.studio.pro.player.ExoPlayerManager
 import kotlin.math.abs
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -44,7 +48,31 @@ fun PlayerScreen(
 ) {
     val uiState     by viewModel.uiState.collectAsStateWithLifecycle()
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
-    val context     = LocalContext.current as Activity
+    val context     = LocalContext.current as androidx.activity.ComponentActivity
+
+    // Picture-in-Picture mode listener
+    var isInPiPMode by remember { mutableStateOf(context.isInPictureInPictureMode) }
+    DisposableEffect(context) {
+        val listener = androidx.core.util.Consumer<androidx.core.app.PictureInPictureModeChangedInfo> { info ->
+            isInPiPMode = info.isInPictureInPictureMode
+        }
+        context.addOnPictureInPictureModeChangedListener(listener)
+        onDispose {
+            context.removeOnPictureInPictureModeChangedListener(listener)
+        }
+    }
+
+    // Gestures state variables
+    var isDraggingVolume by remember { mutableStateOf(false) }
+    var isDraggingBrightness by remember { mutableStateOf(false) }
+    var isDraggingSeek by remember { mutableStateOf(false) }
+    var currentVolume by remember { mutableIntStateOf(0) }
+    var currentBrightness by remember { mutableFloatStateOf(0.5f) }
+    var dragSeekPosition by remember { mutableLongStateOf(0L) }
+    var size by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+
+    val audioManager = remember { context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager }
+    val maxVolume = remember { audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC) }
 
     // Lock to landscape
     LaunchedEffect(Unit) {
@@ -64,16 +92,138 @@ fun PlayerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
+            .onGloballyPositioned { size = it.size }
+            .then(
+                if (!uiState.isLocked && !isInPiPMode) {
+                    Modifier
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { viewModel.toggleControls() },
+                                onDoubleTap = { offset ->
+                                    if (size.width > 0) {
+                                        if (offset.x < size.width / 2) {
+                                            viewModel.seekBackward()
+                                        } else {
+                                            viewModel.seekForward()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                        .pointerInput(playerState.durationMs) {
+                            var totalDragX = 0f
+                            var totalDragY = 0f
+                            var isHorizontalDrag = false
+                            var isVerticalDrag = false
+                            var dragStartVal = 0f
+                            var audioStartVal = 0
+                            var brightnessStartVal = 0f
+                            var seekStartPos = 0L
+
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    totalDragX = 0f
+                                    totalDragY = 0f
+                                    isHorizontalDrag = false
+                                    isVerticalDrag = false
+
+                                    if (offset.x < size.width / 2) {
+                                        val lp = context.window.attributes
+                                        dragStartVal = if (lp.screenBrightness >= 0f) lp.screenBrightness else {
+                                            try {
+                                                android.provider.Settings.System.getInt(context.contentResolver, android.provider.Settings.System.SCREEN_BRIGHTNESS) / 255f
+                                            } catch (e: Exception) {
+                                                0.5f
+                                            }
+                                        }
+                                        brightnessStartVal = dragStartVal
+                                        currentBrightness = dragStartVal
+                                        isDraggingBrightness = true
+                                    } else {
+                                        audioStartVal = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+                                        dragStartVal = audioStartVal.toFloat()
+                                        currentVolume = audioStartVal
+                                        isDraggingVolume = true
+                                    }
+                                    seekStartPos = playerState.currentPositionMs
+                                    dragSeekPosition = seekStartPos
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    totalDragX += dragAmount.x
+                                    totalDragY += dragAmount.y
+
+                                    if (!isHorizontalDrag && !isVerticalDrag) {
+                                        if (abs(totalDragX) > abs(totalDragY)) {
+                                            if (abs(totalDragX) > 10f) {
+                                                isHorizontalDrag = true
+                                                isDraggingVolume = false
+                                                isDraggingBrightness = false
+                                                isDraggingSeek = true
+                                            }
+                                        } else {
+                                            if (abs(totalDragY) > 10f) {
+                                                isVerticalDrag = true
+                                                isDraggingSeek = false
+                                            }
+                                        }
+                                    }
+
+                                    if (isHorizontalDrag && playerState.durationMs > 0) {
+                                        val screenFraction = totalDragX / size.width.toFloat()
+                                        val maxSeekMs = 180_000L
+                                        val seekDelta = (screenFraction * maxSeekMs).toLong()
+                                        dragSeekPosition = (seekStartPos + seekDelta).coerceIn(0L, playerState.durationMs)
+                                    } else if (isVerticalDrag) {
+                                        if (isDraggingBrightness) {
+                                            val changeFraction = -totalDragY / size.height.toFloat()
+                                            val newBrightness = (brightnessStartVal + changeFraction).coerceIn(0.01f, 1.0f)
+                                            currentBrightness = newBrightness
+                                            val lp = context.window.attributes
+                                            lp.screenBrightness = newBrightness
+                                            context.window.attributes = lp
+                                        } else if (isDraggingVolume) {
+                                            val changeFraction = -totalDragY / size.height.toFloat()
+                                            val step = (changeFraction * maxVolume).toInt()
+                                            val newVolume = (audioStartVal + step).coerceIn(0, maxVolume)
+                                            currentVolume = newVolume
+                                            audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, newVolume, 0)
+                                        }
+                                    }
+                                },
+                                onDragEnd = {
+                                    if (isDraggingSeek) {
+                                        viewModel.seekTo(dragSeekPosition)
+                                        isDraggingSeek = false
+                                    }
+                                    isDraggingVolume = false
+                                    isDraggingBrightness = false
+                                },
+                                onDragCancel = {
+                                    isDraggingVolume = false
+                                    isDraggingBrightness = false
+                                    isDraggingSeek = false
+                                }
+                            )
+                        }
+                } else if (isInPiPMode) {
+                    Modifier
+                } else {
+                    Modifier.pointerInput(Unit) {
+                        detectTapGestures(onTap = { viewModel.toggleControls() })
+                    }
+                }
+            )
     ) {
         // ── ExoPlayer surface ─────────────────────────────────
         PlayerSurface(
             playerManager = viewModel.playerManager,
             modifier      = Modifier.fillMaxSize(),
-            onClick       = { viewModel.toggleControls() },
+            onClick       = { if (!isInPiPMode) viewModel.toggleControls() },
         )
 
         // ── Buffering indicator ───────────────────────────────
-        if (playerState.isBuffering || uiState.isLoadingStream) {
+        if ((playerState.isBuffering || uiState.isLoadingStream) && !isInPiPMode) {
             CircularProgressIndicator(
                 color    = OttColors.Brand,
                 modifier = Modifier.align(Alignment.Center),
@@ -81,30 +231,34 @@ fun PlayerScreen(
         }
 
         // ── Error overlay ─────────────────────────────────────
-        playerState.errorMessage?.let { msg ->
-            ErrorOverlay(message = msg, onRetry = { viewModel.loadStream(contentId, episodeId) })
+        if (!isInPiPMode) {
+            playerState.errorMessage?.let { msg ->
+                ErrorOverlay(message = msg, onRetry = { viewModel.loadStream(contentId, episodeId) })
+            }
         }
 
         // ── Intro skip button ─────────────────────────────────
-        AnimatedVisibility(
-            visible = playerState.showIntroSkip,
-            enter   = slideInHorizontally { it } + fadeIn(),
-            exit    = slideOutHorizontally { it } + fadeOut(),
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 24.dp, bottom = 80.dp),
-        ) {
-            Button(
-                onClick = { viewModel.skipIntro() },
-                colors  = ButtonDefaults.buttonColors(containerColor = Color.White),
-                shape   = RoundedCornerShape(4.dp),
+        if (!isInPiPMode) {
+            AnimatedVisibility(
+                visible = playerState.showIntroSkip,
+                enter   = slideInHorizontally { it } + fadeIn(),
+                exit    = slideOutHorizontally { it } + fadeOut(),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 24.dp, bottom = 80.dp),
             ) {
-                Text("Skip Intro", color = Color.Black, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.width(8.dp))
-                Icon(Icons.Default.FastForward, contentDescription = null, tint = Color.Black)
+                Button(
+                    onClick = { viewModel.skipIntro() },
+                    colors  = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    shape   = RoundedCornerShape(4.dp),
+                ) {
+                    Text("Skip Intro", color = Color.Black, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Default.FastForward, contentDescription = null, tint = Color.Black)
+                }
             }
         }
 
         // ── Controls overlay ──────────────────────────────────
-        if (!uiState.isLocked) {
+        if (!uiState.isLocked && !isInPiPMode) {
             AnimatedVisibility(
                 visible  = uiState.showControls,
                 enter    = fadeIn(),
@@ -129,10 +283,36 @@ fun PlayerScreen(
         }
 
         // ── Lock button (always visible when locked) ──────────
-        if (uiState.isLocked) {
+        if (uiState.isLocked && !isInPiPMode) {
             LockButton(
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp),
                 onUnlock = { viewModel.toggleLock() },
+            )
+        }
+
+        // ── Gestures Visual Indicators ──────────────────────────
+        if (isDraggingBrightness && !isInPiPMode) {
+            VerticalGestureSlider(
+                icon = Icons.Default.Brightness5,
+                value = currentBrightness,
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 48.dp)
+            )
+        }
+
+        if (isDraggingVolume && !isInPiPMode) {
+            VerticalGestureSlider(
+                icon = Icons.Default.VolumeUp,
+                value = currentVolume.toFloat() / maxVolume.coerceAtLeast(1).toFloat(),
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 48.dp)
+            )
+        }
+
+        if (isDraggingSeek && !isInPiPMode) {
+            SeekPreviewOverlay(
+                targetPositionMs = dragSeekPosition,
+                currentPositionMs = playerState.currentPositionMs,
+                durationMs = playerState.durationMs,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
     }
@@ -527,4 +707,103 @@ private fun formatTime(ms: Long): String {
         "%d:%02d:%02d".format(hours, mins, secs)
     else
         "%02d:%02d".format(mins, secs)
+}
+
+@Composable
+private fun VerticalGestureSlider(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    value: Float,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.6f)),
+        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+            .width(44.dp)
+            .height(180.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+            
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .width(4.dp)
+                    .padding(vertical = 8.dp)
+                    .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(2.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(value)
+                        .align(Alignment.BottomStart)
+                        .background(Color.White, RoundedCornerShape(2.dp))
+                )
+            }
+            
+            Text(
+                text = "${(value * 100).toInt()}%",
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeekPreviewOverlay(
+    targetPositionMs: Long,
+    currentPositionMs: Long,
+    durationMs: Long,
+    modifier: Modifier = Modifier
+) {
+    val deltaMs = targetPositionMs - currentPositionMs
+    val isForward = deltaMs >= 0
+    val deltaText = if (isForward) "+${formatTime(deltaMs)}" else "-${formatTime(abs(deltaMs))}"
+    
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.75f)),
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .wrapContentSize()
+            .padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = if (isForward) Icons.Default.FastForward else Icons.Default.FastRewind,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = formatTime(targetPositionMs),
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = deltaText,
+                color = if (isForward) Color(0xFF4CAF50) else Color(0xFFE50914),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
 }

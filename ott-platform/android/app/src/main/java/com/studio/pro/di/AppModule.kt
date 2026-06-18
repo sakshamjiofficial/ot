@@ -104,6 +104,9 @@ object DatabaseModule {
 
     @Provides
     fun provideSearchHistoryDao(db: OttDatabase): SearchHistoryDao  = db.searchHistoryDao()
+
+    @Provides
+    fun provideDownloadedAssetDao(db: OttDatabase): DownloadedAssetDao = db.downloadedAssetDao()
 }
 
 @Module
