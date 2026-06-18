@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -114,12 +115,14 @@ fun SearchScreen(
                         Text("No results for \"$query\"", color = OttColors.TextMuted, fontSize = 15.sp)
                     }
                 }
-                else -> LazyColumn(
+                else -> LazyVerticalGrid(
+                    columns             = GridCells.Fixed(4),
                     contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement   = Arrangement.spacedBy(8.dp),
                 ) {
                     items(uiState.results, key = { it.id }) { item ->
-                        SearchResultRow(item = item, onClick = { onContentClick(item.id) })
+                        SearchResultGridItem(item = item, onClick = { onContentClick(item.id) })
                     }
                 }
             }
@@ -128,93 +131,53 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SearchResultRow(item: Content, onClick: () -> Unit) {
-    Row(
-        modifier              = Modifier
+private fun SearchResultGridItem(item: Content, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .aspectRatio(2f / 3f)
+            .background(OttColors.SurfaceVariant, RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick),
     ) {
-        Box(
-            modifier = Modifier
-                .size(100.dp, 145.dp)
-                .background(OttColors.SurfaceVariant, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp)),
-        ) {
-            AsyncImage(
-                model              = item.posterUrl ?: item.thumbnailUrl,
-                contentDescription = null,
-                contentScale       = ContentScale.Crop,
-                modifier           = Modifier.fillMaxSize(),
-            )
-            if (item.isPremium) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(OttColors.Brand)
-                        .padding(horizontal = 5.dp, vertical = 2.dp),
-                ) {
-                    Text("PRO", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                }
+        AsyncImage(
+            model              = item.posterUrl ?: item.thumbnailUrl,
+            contentDescription = item.title,
+            contentScale       = ContentScale.Crop,
+            modifier           = Modifier.fillMaxSize(),
+        )
+        if (item.isPremium) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(OttColors.Brand)
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+            ) {
+                Text("PRO", color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Bold)
             }
         }
-
-        Text(
-            text = item.title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
     }
 }
 
 @Composable
 private fun SearchShimmerPlaceholder() {
-    LazyColumn(
+    LazyVerticalGrid(
+        columns             = GridCells.Fixed(4),
         contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement   = Arrangement.spacedBy(8.dp),
         userScrollEnabled   = false,
     ) {
-        items(5) {
-            Row(
-                modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                verticalAlignment     = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                // Image Placeholder
-                Box(
-                    modifier = Modifier
-                        .size(100.dp, 145.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .shimmerEffect()
-                )
-
-                // Title Placeholder
-                Column(modifier = Modifier.weight(1f)) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .shimmerEffect()
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .shimmerEffect()
-                    )
-                }
-            }
+        items(12) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(2f / 3f)
+                    .clip(RoundedCornerShape(6.dp))
+                    .shimmerEffect()
+            )
         }
     }
 }
